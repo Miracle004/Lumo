@@ -1,78 +1,74 @@
 import dotenv from 'dotenv'
 import express, { Request, Response, NextFunction, ErrorRequestHandler, Errback } from 'express';
-import { json } from 'body-parser';
-
-
-interface User {
-    id: number,
-    username: string,
-    email: string;
-}
-
+import bodyParser, { json } from 'body-parser';
+import session from 'express-session';
+import routes from './routes/signupRoute';
+import pool from './config/database';
+import passport from 'passport'
+import { Strategy } from 'passport-local'
+import { verify } from './controllers/userController';
 dotenv.config();
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(json());
+app.use(bodyParser.urlencoded({extended: true}));
 
-interface Person {
-    id : number,
-    username: string,
-    email: string
-};
+// Session middleware
+app.use(session({
+    secret: "SOMETYPESHII",
+    resave: false,
+    saveUninitialized: true
+}))
 
-const users : User[] = [
-    {  id: 1, username: "user1", email: "user1@gmail.com" },
-    {  id: 2, username: "user2", email: "user2@gmail.com" },
-    {  id: 3, username: "user3", email: "user3@gmail.com" },
-    {  id: 4, username: "user4", email: "user4@gmail.com" },
-    {  id: 5, username: "user5", email: "user5@gmail.com" },
-    {  id: 6, username: "user6", email: "user6@gmail.com" },
-];
+// Passport setup
+passport.use(new Strategy(verify));
 
-app.get('/api/users', (req : Request, res : Response) =>{
-    res.json(users);
-})
+passport.serializeUser((user: any, cb) => {
+    cb(null, user);
+});
 
-app.get('/api/users/:id', (req : Request, res : Response) =>{
-    const id : number = parseInt(req.params.id);
-    try{
-        const getuser : Person | undefined = users.find((user) => user.id === id);
-        if(getuser == undefined){
-            res.status(500).json("No user found");
+passport.deserializeUser(async (id: number, cb) => {
+    try {
+        const client = await pool.connect();
+        try {
+            const result = await client.query('SELECT id, username, email FROM users where id = $1', [id]);
+            if(result.rows.length === 0)
+                return cb(null, false);
+            cb(null, result.rows[0]);
+        } finally {
+            client.release();
         }
-        res.status(200).json(getuser);
+    } catch(err) {
+        cb(err);
     }
-    catch(err){
-        res.status(500).json({ msg: err })
+});
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Routes
+app.use("/api", routes);
+
+app.use((req: Request, res: Response) => {
+  res.status(404).json({ error: 'Endpoint not found' });
+});
+
+
+const startServer = async () => {
+    try {
+        // Test DB connection
+        await pool.query('SELECT NOW()');
+        console.log("Database connection successful");
+
+        app.listen(PORT, () => {
+            console.log(`App running on PORT: ${PORT}`);
+        });
+    } catch(err) {
+        console.error(`Error starting server ${err}`);
+        process.exit(1);
     }
-})
+}
 
-//Create a new user
-app.post("/api/users/add", (req : Request, res: Response) =>{
-    const username : string = req.body.username;
-    const email : string = req.body.email;
-
-    try{
-        if(!username || !email){
-            res.status(400).json("An Id, username and email is required!");
-        }
-        const newPerson : Person = {
-            id: users.length + 1,
-            username,
-            email
-        }
-
-        const addnewPerson = users.push(newPerson);
-
-        res.status(201).json({addnewPerson, newPerson});
-    }
-    catch(err){
-        res.status(500).json(err);
-    }
-})
-
-
-app.listen(PORT, () =>{
-    console.log("Server is running!");
-}); 
+startServer();
