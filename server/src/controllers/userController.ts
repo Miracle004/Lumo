@@ -18,28 +18,32 @@ export const createUser = async (
 
     const client = await pool.connect();
     try {
-      bcrypt.hash(
-        password,
-        saltrounds,
-        async (err: Error | undefined, hash: string) => {
-          if (err) {
-            res.status(500);
-            console.log(err);
-          } else {
-            const result = await client.query(
-              "INSERT INTO users (username, email, password) VALUES($1, $2, $3) RETURNING id, username, email",
-              [username, email, hash]
-            );
-            const user = result.rows[0];
-            req.login(user, (err) =>{
-              console.error(err);
-              res.status(201).json({ message: "User created successfully", user: user });
-            })
-          }
-        }
+      const hash = await bcrypt.hash(password, saltrounds);
+      
+      console.log(`Attempting to create user: ${username}, ${email}`);
+      const result = await client.query(
+        "INSERT INTO users (username, email, password) VALUES($1, $2, $3) RETURNING id, username, email",
+        [username, email, hash]
       );
+      const user = result.rows[0];
+      console.log('User inserted into DB:', user);
+      
+      req.login(user, (err) => {
+        if (err) {
+          console.error("Login failed after signup:", err);
+          res.status(500).json({ error: "Login failed after signup" });
+          return;
+        }
+        console.log('User logged in successfully after signup');
+        res.status(201).json({ message: "User created successfully", user: user });
+      });
+
     } catch (err: any) {
-      res.status(500).json({ error: err.message ?? err });
+      if (err.code === '23505') {
+        res.status(409).json({ error: "User with this username or email already exists" });
+      } else {
+        res.status(500).json({ error: err.message ?? err });
+      }
     } finally {
       client.release();
     }
@@ -49,9 +53,8 @@ export const createUser = async (
 };
 
 export const verify = async (username: string, password: string, cb: any) => {
+  const client = await pool.connect();
   try {
-    const client = await pool.connect();
-
     const result = await client.query(
       "SELECT * FROM users WHERE username = $1 OR email = $1",
       [username]
@@ -80,6 +83,8 @@ export const verify = async (username: string, password: string, cb: any) => {
   } catch (err) {
     console.error(err);
     return cb(err);
+  } finally {
+    client.release();
   }
 };
 
