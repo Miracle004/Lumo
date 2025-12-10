@@ -6,26 +6,33 @@ import path from 'path';
 import authRoutes from './routes/authRoutes';
 import postRoutes from './routes/postRoutes';
 import uploadRoutes from './routes/uploadRoutes';
+import notificationRoutes from './routes/notificationRoutes';
 import pool from './config/database';
 import passport from './config/passport'; // Import the configured passport
 import cors from 'cors';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
 
 dotenv.config();
 
 const app = express();
+const httpServer = createServer(app); // Create HTTP server
 const PORT = process.env.PORT || 3000;
 const FRONTEND_URL = process.env.FRONTEND_URL;
 
 console.log(`Environment: ${process.env.NODE_ENV}`);
 console.log(`Frontend URL: ${FRONTEND_URL}`);
 
-// CORS Middleware
-app.use(cors({
+// CORS Options
+const corsOptions = {
     origin: FRONTEND_URL,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
-}));
+};
+
+// CORS Middleware
+app.use(cors(corsOptions));
 
 app.use(json({ limit: '30mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '30mb' }));
@@ -49,10 +56,40 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
+// Socket.IO Setup
+export const io = new Server(httpServer, {
+    cors: corsOptions
+});
+
+io.on('connection', (socket) => {
+    console.log('User connected:', socket.id);
+
+    socket.on('join-post', (postId) => {
+        socket.join(`post-${postId}`);
+        console.log(`User ${socket.id} joined post-${postId}`);
+    });
+
+    socket.on('leave-post', (postId) => {
+        socket.leave(`post-${postId}`);
+        console.log(`User ${socket.id} left post-${postId}`);
+    });
+
+    // Handle User Room for Notifications
+    socket.on('join-user', (userId) => {
+        socket.join(`user-${userId}`);
+        console.log(`User ${userId} joined their notification room`);
+    });
+
+    socket.on('disconnect', () => {
+        console.log('User disconnected:', socket.id);
+    });
+});
+
 // Routes
 app.use("/", authRoutes); 
 app.use("/api/posts", postRoutes);
 app.use("/api/upload", uploadRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 // Health Check
 app.get('/health', (req, res) => {
@@ -72,7 +109,7 @@ const startServer = async () => {
         console.log(`DB Host: ${process.env.DB_HOST}`);
         console.log(`DB Name: ${process.env.DB_NAME}`);
 
-        app.listen(PORT, () => {
+        httpServer.listen(PORT, () => {
             console.log(`App running on PORT: ${PORT}`);
         });
     } catch(err) {
