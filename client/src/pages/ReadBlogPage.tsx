@@ -104,7 +104,7 @@ const ReadBlogPage: React.FC = () => {
             
             <div className="article-meta-block">
                 <div className="author-info">
-                    <img src={post.author_avatar || "https://via.placeholder.com/100"} alt={post.author_name || "Author"} className="author-avatar" />
+                    <img src={post.author_avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80"} alt={post.author_name || "Author"} className="author-avatar" />
                     <div className="author-text">
                         <div className="author-name-row">
                             <span className="author-name">{post.author_name || "Unknown Author"}</span>

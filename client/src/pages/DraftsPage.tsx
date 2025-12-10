@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import { Share2, X } from 'lucide-react';
+import { Share2, X, Trash2 } from 'lucide-react';
+import { toastService } from '../services/toastService';
 import './DraftsPage.css';
 
 interface Post {
@@ -36,18 +37,26 @@ const DraftsPage: React.FC = () => {
       setError(null);
 
       if (isAuthenticated) {
+        // Fetch Drafts
         try {
-            // Fetch Drafts
             const draftsResponse = await axios.get('/api/posts/drafts');
             setMyDrafts(draftsResponse.data.myDrafts);
             setSharedDrafts(draftsResponse.data.sharedWithMe);
+        } catch (err: any) {
+            console.error('Failed to fetch drafts:', err);
+            setError('Failed to load your drafts.');
+            toastService.error('Failed to load your drafts.');
+        }
 
-            // Fetch Bookmarks
+        // Fetch Bookmarks (independently)
+        try {
             const bookmarksResponse = await axios.get('/api/posts/bookmarks');
             setSavedPosts(bookmarksResponse.data);
         } catch (err: any) {
-            console.error('Failed to fetch data:', err);
-            setError('Failed to load your content.');
+            console.error('Failed to fetch bookmarks:', err);
+            // Don't set main error, just warn
+            toastService.warn('Failed to load saved stories.');
+            setSavedPosts([]); 
         } finally {
             setLoading(false);
         }
@@ -79,12 +88,48 @@ const DraftsPage: React.FC = () => {
               emails: [collaboratorEmail],
               permission: permission,
           });
-          alert(`Invite sent to ${collaboratorEmail}!`);
+          toastService.success(`Invite sent to ${collaboratorEmail}!`);
           setCollaboratorEmail('');
           setShowShareModal(false);
       } catch (err: any) {
           console.error('Share failed:', err);
-          alert(err.response?.data?.message || 'Failed to share draft');
+          toastService.error(err.response?.data?.message || 'Failed to share draft');
+      }
+  };
+
+  const handleDeleteDraft = async (e: React.MouseEvent, id: string) => {
+      e.preventDefault();
+      if (!window.confirm('Are you sure you want to delete this draft? This cannot be undone.')) return;
+      
+      try {
+          await axios.delete(`/api/posts/${id}`);
+          setMyDrafts(prev => prev.filter(p => p.id !== id));
+          toastService.success('Draft deleted.');
+      } catch (err: any) {
+          console.error('Delete failed:', err);
+          toastService.error(err.response?.data?.message || 'Failed to delete draft');
+      }
+  };
+
+  const handleRemoveBookmark = async (e: React.MouseEvent, id: string) => {
+      e.preventDefault();
+      // No confirmation needed for unbookmarking usually, but can add if desired
+      if (!window.confirm('Remove this story from your library?')) return;
+
+      try {
+          if (isAuthenticated) {
+             await axios.delete(`/api/posts/${id}/bookmark`);
+          } else {
+             // Handle guest local storage removal
+             const saved = JSON.parse(localStorage.getItem('savedPosts') || '[]');
+             const newSaved = saved.filter((p: any) => p.id !== id);
+             localStorage.setItem('savedPosts', JSON.stringify(newSaved));
+          }
+          setSavedPosts(prev => prev.filter(p => p.id !== id));
+          toastService.success('Removed from library.');
+      } catch (err: any) {
+          console.error('Unbookmark failed:', err);
+          toastService.error('Failed to remove bookmark');
       }
   };
 
@@ -132,14 +177,25 @@ const DraftsPage: React.FC = () => {
                         <h3>{draft.title || 'Untitled Draft'}</h3>
                         <p>Last edited: {new Date(draft.updated_at!).toLocaleString()}</p>
                       </Link>
-                      <button 
-                        className="share-icon-btn" 
-                        onClick={(e) => openShareModal(e, draft.id)}
-                        title="Share with collaborators"
-                        style={{ position: 'absolute', top: '10px', right: '10px', background: 'transparent', border: 'none', cursor: 'pointer' }}
-                      >
-                          <Share2 size={18} />
-                      </button>
+                      
+                      <div style={{ position: 'absolute', top: '10px', right: '10px', display: 'flex', gap: '8px' }}>
+                        <button 
+                            className="share-icon-btn" 
+                            onClick={(e) => openShareModal(e, draft.id)}
+                            title="Share with collaborators"
+                            style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}
+                        >
+                            <Share2 size={18} />
+                        </button>
+                        <button 
+                            className="delete-icon-btn" 
+                            onClick={(e) => handleDeleteDraft(e, draft.id)}
+                            title="Delete Draft"
+                            style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#dc3545' }}
+                        >
+                            <Trash2 size={18} />
+                        </button>
+                      </div>
                   </div>
                 ))
               ) : <p>No drafts found.</p>
@@ -160,10 +216,20 @@ const DraftsPage: React.FC = () => {
             {activeTab === 'saved' && (
               savedPosts.length > 0 ? (
                 savedPosts.map(post => (
-                  <Link to={`/read/${post.id}`} key={post.id} className="draft-card">
-                    <h3>{post.title}</h3>
-                    <p>By {post.author_name}</p>
-                  </Link>
+                   <div key={post.id} className="draft-card-wrapper" style={{ position: 'relative' }}>
+                        <Link to={`/read/${post.id}`} className="draft-card">
+                            <h3>{post.title}</h3>
+                            <p>By {post.author_name}</p>
+                        </Link>
+                        <button 
+                            className="delete-icon-btn" 
+                            onClick={(e) => handleRemoveBookmark(e, post.id)}
+                            title="Remove from Library"
+                            style={{ position: 'absolute', top: '10px', right: '10px', background: 'transparent', border: 'none', cursor: 'pointer', color: '#dc3545' }}
+                        >
+                            <Trash2 size={18} />
+                        </button>
+                    </div>
                 ))
               ) : <p>No saved stories.</p>
             )}

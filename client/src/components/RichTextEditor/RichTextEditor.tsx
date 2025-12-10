@@ -5,7 +5,6 @@ import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
 import Underline from '@tiptap/extension-underline';
-import axios from 'axios';
 import { uploadImage } from '../../services/uploadService';
 import {
   Bold,

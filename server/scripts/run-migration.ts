@@ -18,7 +18,7 @@ const runMigration = async () => {
         console.log('Migration completed successfully.');
     } catch (err: any) {
         // Simple error handling: if column exists, ignore.
-        if (err.code === '42701') { // duplicate_column
+        if (err.code === '42701') { //duplicate_column
              console.log('Columns already exist, skipping specific alterations.');
         } else {
              console.error('Migration error:', err.message);

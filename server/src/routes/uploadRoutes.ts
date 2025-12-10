@@ -40,9 +40,12 @@ router.post('/image', upload.single('image'), (req, res) => {
             return;
         }
         
-        // Return relative URL
+        // Return absolute URL
         // We will serve 'server/uploads' at '/uploads'
-        const imageUrl = `/uploads/${req.file.filename}`;
+        const protocol = req.protocol;
+        const host = req.get('host');
+        const imageUrl = `${protocol}://${host}/uploads/${req.file.filename}`;
+        
         res.status(200).json({ url: imageUrl });
     } catch (error) {
         console.error('Upload error:', error);

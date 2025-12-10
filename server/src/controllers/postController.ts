@@ -109,6 +109,38 @@ export const updatePost = async (req: Request, res: Response) => {
     }
 };
 
+export const deletePost = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
+        const userId = (req.user as any).id;
+
+        const post = await PostModel.getPostById(id);
+        if (!post) return res.status(404).json({ error: 'Post not found' });
+
+        if (post.author_id !== userId) {
+            return res.status(403).json({ error: 'Forbidden: You can only delete your own posts' });
+        }
+
+        await PostModel.deletePost(id);
+        res.json({ message: 'Post deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to delete post', details: error });
+    }
+};
+
+export const getDashboardStats = async (req: Request, res: Response) => {
+    try {
+        if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
+        const userId = (req.user as any).id;
+
+        const stats = await PostModel.getPostCounts(userId);
+        res.json(stats);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch dashboard stats', details: error });
+    }
+};
+
 export const publishPost = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;

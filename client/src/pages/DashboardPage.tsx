@@ -1,11 +1,25 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { PenTool, FileText, User, Settings } from 'lucide-react';
 import './DashboardPage.css';
 
 const DashboardPage: React.FC = () => {
   const { user } = useAuth();
+  const [stats, setStats] = useState({ drafts: 0, published: 0 });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await axios.get('/api/posts/stats');
+        setStats(response.data);
+      } catch (error) {
+        console.error('Failed to fetch stats:', error);
+      }
+    };
+    if (user) fetchStats();
+  }, [user]);
 
   return (
     <div className="dashboard-container">
@@ -16,11 +30,11 @@ const DashboardPage: React.FC = () => {
 
       <section className="dashboard-stats">
         <div className="stat-card">
-          <span className="stat-number">0</span>
+          <span className="stat-number">{stats.published}</span>
           <span className="stat-label">Published Stories</span>
         </div>
         <div className="stat-card">
-          <span className="stat-number">0</span>
+          <span className="stat-number">{stats.drafts}</span>
           <span className="stat-label">Drafts</span>
         </div>
         <div className="stat-card">

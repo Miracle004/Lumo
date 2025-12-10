@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
+import { toastService } from '../services/toastService';
 import './Auth.css'; 
 
 const ProfilePage: React.FC = () => {
@@ -24,9 +25,10 @@ const ProfilePage: React.FC = () => {
       // Assuming the API returns the updated user object
       login(response.data.user); // Update the user in AuthContext
       setIsEditingBio(false);
+      toastService.success('Bio updated successfully!');
     } catch (error) {
       console.error('Failed to update bio:', error);
-      alert('Failed to update bio.');
+      toastService.error('Failed to update bio.');
     }
   };
 

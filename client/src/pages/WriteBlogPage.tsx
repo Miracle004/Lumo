@@ -8,6 +8,7 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { io } from 'socket.io-client';
 import { uploadImage } from '../services/uploadService';
+import { toastService } from '../services/toastService';
 import './WriteBlogPage.css';
 
 interface Post {
@@ -50,7 +51,7 @@ const WriteBlogPage: React.FC = () => {
     validationSchema: Yup.object({
       title: Yup.string().max(100, 'Must be 100 characters or less').required('Required'),
       content: Yup.string().min(20, 'Must be at least 20 characters').required('Required'),
-      imageUrl: Yup.string().url('Invalid URL').nullable(),
+      imageUrl: Yup.string().nullable(), // Removed .url() validation temporarily
     }),
     onSubmit: async (values, { setSubmitting }) => {
       setSubmitting(true);
@@ -58,17 +59,37 @@ const WriteBlogPage: React.FC = () => {
         if (!id) {
             return;
         }
+
+        // Save first to ensure latest content is published
+        setSaveStatus('Saving...');
+        await axios.put(`/api/posts/${id}`, {
+            title: values.title,
+            content: values.content,
+            coverImageUrl: values.imageUrl,
+        });
+        setSaveStatus('Saved');
+
+        // Then Publish
         await axios.post(`/api/posts/${id}/publish`);
-        alert('Published successfully!');
+        toastService.success('Published successfully!');
         navigate(`/read/${id}`);
       } catch (err: any) {
         console.error('Publish failed:', err);
-        setPostError(err.response?.data?.message || 'Failed to publish post');
+        setSaveStatus('Error');
+        const errorMsg = err.response?.data?.message || 'Failed to publish post';
+        setPostError(errorMsg);
+        toastService.error(errorMsg);
       } finally {
         setSubmitting(false);
       }
     },
   });
+
+  // Debugging log
+  useEffect(() => {
+    console.log('Formik Values:', formik.values);
+    console.log('Formik Errors:', formik.errors);
+  }, [formik.values, formik.errors]);
 
   const handleCoverImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
@@ -81,7 +102,7 @@ const WriteBlogPage: React.FC = () => {
           }
       } catch (error) {
           console.error('Failed to upload cover image:', error);
-          alert('Failed to upload cover image. Please try again.');
+          toastService.error('Failed to upload cover image. Please try again.');
       } finally {
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
@@ -114,7 +135,9 @@ const WriteBlogPage: React.FC = () => {
           setPostCollaborators(collabResponse.data.collaborators);
         } catch (err: any) {
           console.error('Failed to fetch post:', err);
-          setPostError(err.response?.data?.message || 'Failed to load post');
+          const errorMsg = err.response?.data?.message || 'Failed to load post';
+          setPostError(errorMsg);
+          toastService.error(errorMsg);
           if (err.response?.status === 403 || err.response?.status === 404) {
             navigate('/dashboard');
           }
@@ -122,20 +145,10 @@ const WriteBlogPage: React.FC = () => {
           setInitialLoading(false);
         }
       } else {
+        // New Post - Don't create on DB yet. Wait for user input.
         setIsNewPost(true);
-        try {
-          const response = await axios.post('/api/posts/create', {
-            title: 'Untitled Draft',
-            content: '',
-          });
-          setCurrentPost(response.data);
-          navigate(`/write/${response.data.id}`, { replace: true });
-        } catch (err: any) {
-          console.error('Failed to create new post:', err);
-          setPostError(err.response?.data?.message || 'Failed to create new draft');
-        } finally {
-          setInitialLoading(false);
-        }
+        setInitialLoading(false);
+        // Formik initialValues are already empty strings, which is correct for new post.
       }
     };
 
@@ -143,32 +156,56 @@ const WriteBlogPage: React.FC = () => {
   }, [id, isAuthenticated, navigate]);
 
   const autoSave = useCallback(async () => {
-    if (!id || !currentPost || !formik.dirty || initialLoading || currentPost.status === 'published') return;
+    // Only save if dirty and not loading. 
+    // If it's a new post (no ID), we still want to save (create) if dirty.
+    if (!formik.dirty || initialLoading || (currentPost && currentPost.status === 'published')) return;
 
     setSaveStatus('Saving...');
     try {
-      const updatedPost = {
-        title: formik.values.title,
-        content: formik.values.content,
-        coverImageUrl: formik.values.imageUrl,
-      };
-      const response = await axios.put(`/api/posts/${id}`, updatedPost);
-      setCurrentPost(response.data);
-      formik.resetForm({ values: formik.values });
-      setSaveStatus('Saved');
+      if (!id) {
+          // First save: Create the post
+          const response = await axios.post('/api/posts/create', {
+            title: formik.values.title,
+            content: formik.values.content,
+          });
+          const newPost = response.data;
+          setCurrentPost(newPost);
+          setSaveStatus('Saved');
+          // Update URL without reloading
+          navigate(`/write/${newPost.id}`, { replace: true });
+          
+          // Future updates will have 'id' and fall into the 'else' block
+      } else {
+          // Subsequent saves: Update existing
+          const updatedPost = {
+            title: formik.values.title,
+            content: formik.values.content,
+            coverImageUrl: formik.values.imageUrl,
+          };
+          const response = await axios.put(`/api/posts/${id}`, updatedPost);
+          setCurrentPost(response.data);
+          setSaveStatus('Saved');
+      }
+      
+      // Reset dirty state slightly so we don't save again immediately unless user types more?
+      // Formik's resetForm clears dirty, but we might want to keep the values.
+      // formik.resetForm({ values: formik.values }); // This sets dirty to false.
     } catch (err) {
       console.error('Auto-save failed:', err);
       setSaveStatus('Error');
     }
-  }, [id, currentPost, formik.values, formik.dirty, initialLoading]);
+  }, [id, currentPost, formik.values, formik.dirty, initialLoading, navigate]);
 
   useEffect(() => {
+    // Only start timer if form is dirty
+    if (!formik.dirty) return;
+
     const timer = setTimeout(() => {
       autoSave();
     }, 3000);
 
     return () => clearTimeout(timer);
-  }, [autoSave]);
+  }, [autoSave, formik.dirty]);
 
   useEffect(() => {
     if (!id || !isAuthenticated) return;
@@ -179,6 +216,7 @@ const WriteBlogPage: React.FC = () => {
     socket.on('post-updated', (updatedContent: { content: string, updatedBy: string }) => {
       console.log('Post updated by collaborator:', updatedContent.updatedBy);
       // For now, just log. In a real app, you'd merge changes or update UI.
+      toastService.info(`Post updated by ${updatedContent.updatedBy}`);
     });
 
     return () => {
@@ -196,7 +234,7 @@ const WriteBlogPage: React.FC = () => {
               emails: [collaboratorEmail],
               permission: permission,
           });
-          alert(`Shared with ${response.data.added.length ? collaboratorEmail : 'no one'}!`);
+          toastService.success(`Shared with ${response.data.added.length ? collaboratorEmail : 'no one'}!`);
           if (response.data.added.length) {
             const collabResponse = await axios.get(`/api/posts/${id}/collaborators`);
             setPostCollaborators(collabResponse.data.collaborators);
@@ -205,7 +243,7 @@ const WriteBlogPage: React.FC = () => {
           setShowShareModal(false);
       } catch (err: any) {
           console.error('Share failed:', err);
-          alert(err.response?.data?.message || 'Failed to share post');
+          toastService.error(err.response?.data?.message || 'Failed to share post');
       }
   };
 

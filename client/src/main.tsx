@@ -29,7 +29,7 @@ const GoogleCallback = () => {
     window.location.href = 'http://localhost:3000/auth/google/callback' + location.search;
   }, [location]);
 
-  return <div style={{ display: 'flex', justifyContent: 'center', marginTop: '50px' }}>Completing Login...</div>;
+  return <div style={{ display: 'flex', justifyContent: 'center', marginTop: '50px' }}>Verifying...</div>;
 };
 
 const router = createBrowserRouter([

@@ -23,7 +23,13 @@ export const createPost = async (authorId: number, title?: string, content?: any
 };
 
 export const getPostById = async (id: string): Promise<Post | null> => {
-  const result = await pool.query('SELECT * FROM posts WHERE id = $1', [id]);
+  const result = await pool.query(
+    `SELECT p.*, u.username as author_name, u.profile_picture as author_avatar
+     FROM posts p
+     LEFT JOIN users u ON p.author_id = u.id
+     WHERE p.id = $1`,
+    [id]
+  );
   return result.rows[0] || null;
 };
 
@@ -74,6 +80,27 @@ export const publishPost = async (id: string, readTime: number): Promise<Post> =
         [id, readTime]
     );
     return result.rows[0];
+};
+
+export const deletePost = async (id: string): Promise<void> => {
+    await pool.query('DELETE FROM posts WHERE id = $1', [id]);
+};
+
+export const getPostCounts = async (userId: number): Promise<{ drafts: number; published: number }> => {
+    const result = await pool.query(
+        `SELECT status, COUNT(*) as count FROM posts WHERE author_id = $1 GROUP BY status`,
+        [userId]
+    );
+    
+    let drafts = 0;
+    let published = 0;
+
+    result.rows.forEach((row: any) => {
+        if (row.status === 'draft') drafts = parseInt(row.count, 10);
+        if (row.status === 'published') published = parseInt(row.count, 10);
+    });
+
+    return { drafts, published };
 };
 
 export const getPublishedPosts = async (limit: number = 10, offset: number = 0): Promise<Post[]> => {
