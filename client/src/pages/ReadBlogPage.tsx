@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Share2, Bookmark, MessageSquare, X as XIcon, Facebook, Instagram, Twitter } from 'lucide-react'; // Added icons
 import axios from 'axios';
+import { getRenderableHTML } from '../utils/textUtils';
 import './ReadBlogPage.css';
 
 interface Post {
@@ -76,23 +77,6 @@ const ReadBlogPage: React.FC = () => {
       setShowShareModal(false);
   };
 
-  // Helper to ensure content is string
-  const getRenderableContent = (content: any) => {
-    if (typeof content === 'string') {
-        // Attempt to detect if it's a JSON stringified object (the "Issue 1" bug)
-        if (content.trim().startsWith('{') && content.includes('"text":')) {
-             try {
-                 const parsed = JSON.parse(content);
-                 if (parsed.text) return parsed.text; // Or handle other JSON structures
-             } catch (e) {
-                 // Not JSON, just normal string
-             }
-        }
-        return content;
-    }
-    return '';
-  };
-
   if (loading) {
     return <div className="read-page-container">Loading post...</div>;
   }
@@ -151,7 +135,7 @@ const ReadBlogPage: React.FC = () => {
         <div className="article-content-wrapper container">
             <div
             className="article-body-content"
-            dangerouslySetInnerHTML={{ __html: getRenderableContent(post.content) }}
+            dangerouslySetInnerHTML={{ __html: getRenderableHTML(post.content) }}
             />
             
             {/* Tooltip Placeholder (Visual representation) */}

@@ -9,6 +9,7 @@ interface User {
   username: string;
   email: string;
   avatar?: string;
+  bio?: string; // Add bio field
 }
 
 interface AuthContextType {
@@ -31,8 +32,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (response.data.isAuthenticated) {
           const userData = response.data.user;
           setUser({
-            ...userData,
-            avatar: userData.profile_picture || userData.avatar // Handle both cases
+            id: userData.id,
+            username: userData.username,
+            email: userData.email,
+            avatar: userData.profile_picture || userData.avatar, // Handle both cases
+            bio: userData.bio, // Map bio
           });
         } else {
           setUser(null);

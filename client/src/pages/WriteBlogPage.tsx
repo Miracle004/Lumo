@@ -1,12 +1,13 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { useParams, useNavigate } from 'react-router-dom';
 import RichTextEditor from '../components/RichTextEditor/RichTextEditor';
-import { Share2, X } from 'lucide-react';
+import { Share2, X, Image as ImageIcon } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { io } from 'socket.io-client';
+import { uploadImage } from '../services/uploadService';
 import './WriteBlogPage.css';
 
 interface Post {
@@ -37,6 +38,7 @@ const WriteBlogPage: React.FC = () => {
   const [isNewPost, setIsNewPost] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [postError, setPostError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const formik = useFormik({
     initialValues: {
@@ -67,6 +69,26 @@ const WriteBlogPage: React.FC = () => {
       }
     },
   });
+
+  const handleCoverImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      try {
+          const url = await uploadImage(file);
+          if (url) {
+              formik.setFieldValue('imageUrl', url);
+          }
+      } catch (error) {
+          console.error('Failed to upload cover image:', error);
+          alert('Failed to upload cover image. Please try again.');
+      } finally {
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+      }
+  };
+
 
   useEffect(() => {
     if (!isAuthenticated && !initialLoading) {
@@ -243,17 +265,36 @@ const WriteBlogPage: React.FC = () => {
             </div>
 
              <div className="cover-image-input-container">
-                <input
-                    id="imageUrl"
-                    name="imageUrl"
-                    type="url"
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    value={formik.values.imageUrl}
-                    className="cover-image-input"
-                    placeholder="Add a cover image URL..."
-                    disabled={currentPost?.status === 'published'}
+                <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    onChange={handleCoverImageUpload} 
+                    style={{ display: 'none' }} 
+                    accept="image/*"
                 />
+                {!formik.values.imageUrl ? (
+                    <button 
+                        type="button" 
+                        className="add-cover-btn" 
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={currentPost?.status === 'published'}
+                    >
+                        <ImageIcon size={20} /> Add Cover Image
+                    </button>
+                ) : (
+                    <div className="cover-image-preview">
+                        <img src={formik.values.imageUrl} alt="Cover" />
+                        {currentPost?.status !== 'published' && (
+                            <button 
+                                type="button" 
+                                className="remove-cover-btn"
+                                onClick={() => formik.setFieldValue('imageUrl', '')}
+                            >
+                                <X size={16} /> Remove
+                            </button>
+                        )}
+                    </div>
+                )}
              </div>
 
             <div className="editor-container">

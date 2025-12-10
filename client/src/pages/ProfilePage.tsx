@@ -1,17 +1,39 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate, Link } from 'react-router-dom'; // Import Link
+import { useNavigate, Link } from 'react-router-dom';
+import axios from 'axios';
 import './Auth.css'; 
 
 const ProfilePage: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, login } = useAuth(); // Destructure login from useAuth
   const navigate = useNavigate();
+  const [isEditingBio, setIsEditingBio] = useState(false);
+  const [bioText, setBioText] = useState(user?.bio || '');
 
   useEffect(() => {
     if (!user) {
       navigate('/login');
+    } else {
+      setBioText(user.bio || ''); // Initialize bioText when user loads
     }
   }, [user, navigate]);
+
+  const handleSaveBio = async () => {
+    try {
+      const response = await axios.put('/user/profile', { bio: bioText });
+      // Assuming the API returns the updated user object
+      login(response.data.user); // Update the user in AuthContext
+      setIsEditingBio(false);
+    } catch (error) {
+      console.error('Failed to update bio:', error);
+      alert('Failed to update bio.');
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setBioText(user?.bio || ''); // Revert to original bio
+    setIsEditingBio(false);
+  };
 
   if (!user) {
     return <div>Loading profile...</div>;
@@ -30,9 +52,30 @@ const ProfilePage: React.FC = () => {
           <p>{user.email}</p>
         </div>
 
-        <div className="form-group">
+        <div className="form-group" style={{ textAlign: 'left' }}>
             <h3>Bio</h3>
-            <p>No bio yet.</p>
+            {isEditingBio ? (
+                <>
+                    <textarea
+                        value={bioText}
+                        onChange={(e) => setBioText(e.target.value)}
+                        rows={5}
+                        style={{ width: '100%', padding: '0.5rem', border: '1px solid var(--border-color)', borderRadius: '4px', marginBottom: '0.5rem', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}
+                        placeholder="Tell us about yourself..."
+                    ></textarea>
+                    <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                        <button onClick={handleCancelEdit} className="btn btn-secondary">Cancel</button>
+                        <button onClick={handleSaveBio} className="btn btn-primary">Save</button>
+                    </div>
+                </>
+            ) : (
+                <>
+                    <p>{user.bio || 'No bio yet.'}</p>
+                    <button onClick={() => setIsEditingBio(true)} className="btn btn-secondary" style={{ marginTop: '0.5rem' }}>
+                        Edit Bio
+                    </button>
+                </>
+            )}
         </div>
 
         {/* New Link to My Stories */}

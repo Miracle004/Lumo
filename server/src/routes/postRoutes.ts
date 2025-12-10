@@ -7,6 +7,7 @@ const router = Router();
 
 // Public Routes
 router.get('/published', PostController.getPublicPosts);
+router.get('/:id', PostController.getPost); // Moved before authentication middleware
 
 // Protected Routes
 router.use(ensureAuthenticated);

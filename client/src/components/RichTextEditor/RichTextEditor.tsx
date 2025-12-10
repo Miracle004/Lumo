@@ -1,10 +1,12 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useRef } from 'react';
 import { useEditor, EditorContent, Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
 import Underline from '@tiptap/extension-underline';
+import axios from 'axios';
+import { uploadImage } from '../../services/uploadService';
 import {
   Bold,
   Italic,
@@ -27,9 +29,12 @@ interface RichTextEditorProps {
   onChange: (content: string) => void;
   placeholder?: string;
   editable?: boolean;
+  readOnly?: boolean;
 }
 
 const MenuBar = ({ editor }: { editor: Editor | null }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   if (!editor) {
     return null;
   }
@@ -54,15 +59,38 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
   }, [editor]);
 
   const addImage = useCallback(() => {
-    const url = window.prompt('Image URL');
+    fileInputRef.current?.click();
+  }, []);
 
-    if (url) {
-      editor.chain().focus().setImage({ src: url }).run();
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const url = await uploadImage(file);
+      if (url) {
+        editor.chain().focus().setImage({ src: url }).run();
+      }
+    } catch (error) {
+      console.error('Failed to upload image:', error);
+      alert('Failed to upload image. Please try again.');
+    } finally {
+        // Reset input value so same file can be selected again if needed
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
     }
-  }, [editor]);
+  };
 
   return (
     <div className="editor-toolbar">
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        onChange={handleImageUpload} 
+        style={{ display: 'none' }} 
+        accept="image/*"
+      />
       <div className="toolbar-group">
         <button
           type="button"

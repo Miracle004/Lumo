@@ -22,6 +22,8 @@ interface Post {
   excerpt?: string;
 }
 
+import { getPlainText } from '../utils/textUtils';
+
 const HomePage: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState('Latest');
   const [posts, setPosts] = useState<Post[]>([]);
@@ -36,10 +38,8 @@ const HomePage: React.FC = () => {
         const mappedPosts = response.data.map((p: any) => ({
           ...p,
           type: 'standard', // Default for now
-          height: Math.random() > 0.5 ? 'tall' : 'short', // Randomize masonry height
-          excerpt: typeof p.content === 'string' 
-            ? p.content.substring(0, 100) + '...' 
-            : 'Click to read more...',
+          height: 'standard', // Fixed height for consistency
+          excerpt: getPlainText(p.content).substring(0, 100) + (getPlainText(p.content).length > 100 ? '...' : ''),
           date: new Date(p.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
           image: p.cover_image_url,
           authorAvatar: p.author_avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80"

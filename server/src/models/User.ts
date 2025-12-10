@@ -8,6 +8,7 @@ export interface User {
   google_id?: string;
   auth_provider: 'local' | 'google';
   profile_picture?: string;
+  bio?: string; // Add bio field
 }
 
 export const findUserByEmail = async (email: string): Promise<User | null> => {

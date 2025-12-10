@@ -2,8 +2,10 @@ import dotenv from 'dotenv';
 import express, { Request, Response } from 'express';
 import bodyParser, { json } from 'body-parser';
 import session from 'express-session';
+import path from 'path';
 import authRoutes from './routes/authRoutes';
 import postRoutes from './routes/postRoutes';
+import uploadRoutes from './routes/uploadRoutes';
 import pool from './config/database';
 import passport from './config/passport'; // Import the configured passport
 import cors from 'cors';
@@ -25,8 +27,11 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-app.use(json());
-app.use(bodyParser.urlencoded({extended: true}));
+app.use(json({ limit: '30mb' }));
+app.use(bodyParser.urlencoded({ extended: true, limit: '30mb' }));
+
+// Serve uploaded files statically
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Session middleware
 app.use(session({
@@ -47,6 +52,7 @@ app.use(passport.session());
 // Routes
 app.use("/", authRoutes); 
 app.use("/api/posts", postRoutes);
+app.use("/api/upload", uploadRoutes);
 
 // Health Check
 app.get('/health', (req, res) => {

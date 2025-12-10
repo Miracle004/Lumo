@@ -77,26 +77,83 @@
 }
 
 .cover-image-input-container {
-  margin-bottom: 1.5rem;
+    margin-bottom: 2rem;
 }
 
-.cover-image-input {
-  width: 100%;
-  padding: 0.5rem;
-  border: none;
-  border-bottom: 1px dashed var(--border-color);
-  background: transparent;
-  color: var(--text-primary);
-  font-size: 0.9rem;
+.title-input {
+    width: 100%;
+    border: none;
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    background: transparent;
+    outline: none;
+    padding: 0;
+    font-family: 'Times New Roman', Times, serif; /* Or whatever serif font you prefer for titles */
 }
 
-.cover-image-input:focus {
-  outline: none;
-  border-bottom-color: var(--accent);
+.title-input::placeholder {
+    color: var(--text-muted);
+}
+
+.add-cover-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    background-color: var(--bg-secondary);
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+}
+
+.add-cover-btn:hover {
+    background-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+.cover-image-preview {
+    position: relative;
+    width: 100%;
+    max-height: 400px;
+    overflow: hidden;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.cover-image-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.remove-cover-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    padding: 0.5rem 0.75rem;
+    border-radius: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    transition: background-color 0.2s;
+}
+
+.remove-cover-btn:hover {
+    background-color: rgba(0, 0, 0, 0.7);
 }
 
 .editor-container {
-  min-height: 400px;
+    min-height: 500px;
 }
 
 .error-message {

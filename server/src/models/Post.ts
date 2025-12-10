@@ -51,9 +51,10 @@ export const getUserDrafts = async (userId: number): Promise<Post[]> => {
 
 export const getSharedDrafts = async (userId: number): Promise<Post[]> => {
     const result = await pool.query(
-        `SELECT p.* 
+        `SELECT p.*, u.username as author_name
          FROM posts p
          JOIN post_collaborators pc ON p.id = pc.post_id
+         JOIN users u ON p.author_id = u.id
          WHERE pc.user_id = $1 AND p.status = 'draft'
          ORDER BY p.updated_at DESC`,
         [userId]

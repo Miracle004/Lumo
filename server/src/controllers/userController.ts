@@ -88,7 +88,64 @@ export const verify = async (username: string, password: string, cb: any) => {
   }
 };
 
+
+export const updateProfile = async (req: Request, res: Response): Promise<void> => {
+  try {
+    if (!req.isAuthenticated()) {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
+
+    const { bio, profile_picture, username } = req.body;
+    const userId = (req.user as any).id; // Assuming req.user is populated by Passport
+
+    const client = await pool.connect();
+    try {
+      let query = 'UPDATE users SET updated_at = NOW() ';
+      const params = [];
+      let paramCount = 1;
+
+      if (bio !== undefined) {
+        query += ` , bio = $${paramCount}`;
+        params.push(bio);
+        paramCount++;
+      }
+      if (profile_picture !== undefined) {
+        query += ` , profile_picture = $${paramCount}`;
+        params.push(profile_picture);
+        paramCount++;
+      }
+      if (username !== undefined) {
+        query += ` , username = $${paramCount}`;
+        params.push(username);
+        paramCount++;
+      }
+
+      query += ` WHERE id = $${paramCount} RETURNING id, username, email, profile_picture, bio`;
+      params.push(userId);
+
+      const result = await client.query(query, params);
+      
+      if (result.rows.length > 0) {
+        res.status(200).json({ message: 'Profile updated successfully', user: result.rows[0] });
+      } else {
+        res.status(404).json({ message: 'User not found' });
+      }
+
+    } catch (err: any) {
+      console.error('Error updating profile:', err);
+      res.status(500).json({ error: err.message ?? 'Internal server error' });
+    } finally {
+      client.release();
+    }
+  } catch (err) {
+    console.error('Error in updateProfile:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 export default {
   createUser,
   verify,
+  updateProfile,
 };

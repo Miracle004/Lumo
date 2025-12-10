@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createUser } from "../controllers/userController";
+import { createUser, updateProfile } from "../controllers/userController";
 import passport from "passport";
 import { Request, Response, NextFunction } from "express";
 
@@ -11,6 +11,7 @@ declare global {
       username: string;
       email: string;
       profile_picture?: string;
+      bio?: string; // Add bio to Express.User interface
     }
   }
 }
@@ -40,7 +41,8 @@ router.post("/user/login", (req, res, next) => {
                 id: user.id,
                 username: user.username,
                 email: user.email,
-                avatar: user.profile_picture // Map to avatar for frontend consistency
+                avatar: user.profile_picture, // Map to avatar for frontend consistency
+                bio: user.bio // Include bio
             } 
         });
       });
@@ -86,6 +88,14 @@ router.get('/auth/me', (req, res) => {
     } else {
         res.json({ isAuthenticated: false, user: null });
     }
+});
+
+// Update User Profile
+router.put('/user/profile', (req, res, next) => {
+    if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: 'Unauthorized' });
+    }
+    updateProfile(req, res);
 });
 
 export default router;
