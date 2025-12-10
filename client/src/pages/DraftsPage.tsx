@@ -11,9 +11,9 @@ interface Post {
   title: string;
   updated_at?: string;
   author_name?: string;
-  // For bookmarks
   author_avatar?: string;
   cover_image_url?: string;
+  is_viewed?: boolean;
 }
 
 const DraftsPage: React.FC = () => {
@@ -37,7 +37,7 @@ const DraftsPage: React.FC = () => {
       setError(null);
 
       if (isAuthenticated) {
-        // Fetch Drafts
+        // Fetch Drafts (My Drafts + Shared With Me)
         try {
             const draftsResponse = await axios.get('/api/posts/drafts');
             setMyDrafts(draftsResponse.data.myDrafts);
@@ -54,7 +54,6 @@ const DraftsPage: React.FC = () => {
             setSavedPosts(bookmarksResponse.data);
         } catch (err: any) {
             console.error('Failed to fetch bookmarks:', err);
-            // Don't set main error, just warn
             toastService.warn('Failed to load saved stories.');
             setSavedPosts([]); 
         } finally {
@@ -73,6 +72,19 @@ const DraftsPage: React.FC = () => {
 
     fetchData();
   }, [isAuthenticated]);
+
+  // Mark notifications as read when viewing shared drafts
+  useEffect(() => {
+      if (isAuthenticated && activeTab === 'shared') {
+          // Fire and forget - don't block UI
+          axios.post('/api/notifications/mark-read')
+               .then(() => {
+                  // Optimistically update local state to clear badges immediately
+                  setSharedDrafts(prev => prev.map(d => ({ ...d, is_viewed: true })));
+               })
+               .catch(err => console.error('Failed to mark notifications read', err));
+      }
+  }, [isAuthenticated, activeTab]);
 
   const openShareModal = (e: React.MouseEvent, draftId: string) => {
       e.preventDefault(); // Prevent Link navigation
@@ -113,7 +125,6 @@ const DraftsPage: React.FC = () => {
 
   const handleRemoveBookmark = async (e: React.MouseEvent, id: string) => {
       e.preventDefault();
-      // No confirmation needed for unbookmarking usually, but can add if desired
       if (!window.confirm('Remove this story from your library?')) return;
 
       try {
@@ -133,6 +144,11 @@ const DraftsPage: React.FC = () => {
       }
   };
 
+  // Calculate counts
+  const myDraftsCount = myDrafts.length;
+  const sharedUnreadCount = sharedDrafts.filter(d => d.is_viewed === false).length;
+  const savedCount = savedPosts.length;
+
   return (
     <div className="drafts-page">
       <h1>Your Library</h1>
@@ -146,13 +162,25 @@ const DraftsPage: React.FC = () => {
                   className={`tab-btn ${activeTab === 'myDrafts' ? 'active' : ''}`}
                   onClick={() => setActiveTab('myDrafts')}
                 >
-                  My Drafts
+                  My Drafts ({myDraftsCount})
                 </button>
                 <button 
                   className={`tab-btn ${activeTab === 'shared' ? 'active' : ''}`}
                   onClick={() => setActiveTab('shared')}
+                  style={{ position: 'relative' }}
                 >
                   Shared With Me
+                  {sharedUnreadCount > 0 && (
+                      <span className="tab-badge" style={{
+                          marginLeft: '8px',
+                          backgroundColor: 'red',
+                          color: 'white',
+                          borderRadius: '50%',
+                          padding: '2px 6px',
+                          fontSize: '11px',
+                          verticalAlign: 'middle'
+                      }}>{sharedUnreadCount}</span>
+                  )}
                 </button>
             </>
         )}
@@ -160,7 +188,7 @@ const DraftsPage: React.FC = () => {
           className={`tab-btn ${activeTab === 'saved' ? 'active' : ''}`}
           onClick={() => setActiveTab('saved')}
         >
-          Saved For Later
+          Saved For Later ({savedCount})
         </button>
       </div>
 

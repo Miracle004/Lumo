@@ -207,24 +207,6 @@ const WriteBlogPage: React.FC = () => {
     return () => clearTimeout(timer);
   }, [autoSave, formik.dirty]);
 
-  useEffect(() => {
-    if (!id || !isAuthenticated) return;
-
-    const socket = io();
-    socket.emit('join-post', id);
-
-    socket.on('post-updated', (updatedContent: { content: string, updatedBy: string }) => {
-      console.log('Post updated by collaborator:', updatedContent.updatedBy);
-      // For now, just log. In a real app, you'd merge changes or update UI.
-      toastService.info(`Post updated by ${updatedContent.updatedBy}`);
-    });
-
-    return () => {
-      socket.emit('leave-post', id);
-      socket.disconnect();
-    };
-  }, [id, isAuthenticated]);
-
 
   const handleShare = async (e: React.FormEvent) => {
       e.preventDefault();

@@ -1,13 +1,32 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Outlet, Link } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { Search, Bookmark, Leaf, Sun, Moon } from 'lucide-react';
+import { ToastContainer } from 'react-toastify';
+import axios from 'axios';
+import 'react-toastify/dist/ReactToastify.css';
 import './Layout.css';
 
 const Layout: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
   const { user, isAuthenticated } = useAuth();
+  const [notificationCount, setNotificationCount] = useState(0);
+
+  useEffect(() => {
+    if (!isAuthenticated || !user) return;
+
+    // Fetch initial count
+    const fetchCount = async () => {
+        try {
+            const res = await axios.get('/api/notifications/count');
+            setNotificationCount(res.data.count);
+        } catch (error) {
+            console.error('Failed to fetch notifications', error);
+        }
+    };
+    fetchCount();
+  }, [isAuthenticated, user]); // Kept dependency simple as loop issue was likely socket related
 
   return (
     <div className="layout-container">
@@ -30,8 +49,21 @@ const Layout: React.FC = () => {
             </Link>
           )}
           
-          <Link to="/drafts" className="nav-icon-btn" aria-label="Bookmarks">
+          <Link to="/drafts" className="nav-icon-btn" aria-label="Bookmarks" style={{ position: 'relative' }}>
             <Bookmark size={20} />
+            {notificationCount > 0 && (
+                <span className="notification-badge" style={{
+                    position: 'absolute',
+                    top: '-5px',
+                    right: '-5px',
+                    backgroundColor: 'red',
+                    color: 'white',
+                    borderRadius: '50%',
+                    padding: '2px 5px',
+                    fontSize: '10px',
+                    fontWeight: 'bold'
+                }}>{notificationCount}</span>
+            )}
           </Link>
           
           <button onClick={toggleTheme} className="nav-icon-btn theme-toggle" aria-label="Toggle theme">
@@ -58,6 +90,7 @@ const Layout: React.FC = () => {
       <main className="main-content">
         <Outlet />
       </main>
+      <ToastContainer />
     </div>
   );
 };

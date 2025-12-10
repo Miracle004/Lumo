@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Share2, Bookmark, MessageSquare, X as XIcon, Facebook, Instagram, Twitter } from 'lucide-react'; // Added icons
+import { Share2, Bookmark, MessageSquare, X as XIcon} from 'lucide-react';
 import axios from 'axios';
 import { getRenderableHTML } from '../utils/textUtils';
 import './ReadBlogPage.css';
