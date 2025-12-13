@@ -102,13 +102,44 @@
 .action-btn {
   color: var(--text-secondary);
   padding: 0.5rem;
-  border-radius: 50%;
+  border-radius: 50%; /* This might need adjustment for text + icon */
   transition: all 0.2s;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .action-btn:hover {
   color: var(--text-primary);
   background-color: var(--bg-secondary);
+}
+
+.like-btn.liked {
+    color: #ef4444;
+}
+
+.like-count {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+/* Article Tags */
+.article-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.tag-pill {
+    background-color: var(--bg-secondary);
+    color: var(--text-secondary);
+    padding: 0.25rem 0.75rem;
+    border-radius: 16px;
+    font-size: 0.85rem;
 }
 
 /* Hero Image */

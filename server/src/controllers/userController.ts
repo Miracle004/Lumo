@@ -1,6 +1,8 @@
 import pool from "../config/database";
 import bcrypt from "bcrypt";
 import type { Request, Response } from "express";
+import * as UserModel from '../models/User';
+import * as PostModel from '../models/Post';
 
 const saltrounds = 10;
 
@@ -97,31 +99,36 @@ export const updateProfile = async (req: Request, res: Response): Promise<void> 
     }
 
     const { bio, profile_picture, username } = req.body;
-    const userId = (req.user as any).id; // Assuming req.user is populated by Passport
+    const userId = (req.user as any).id;
 
     const client = await pool.connect();
     try {
-      let query = 'UPDATE users SET updated_at = NOW() ';
-      const params = [];
+      const updates: string[] = [];
+      const params: any[] = [];
       let paramCount = 1;
 
       if (bio !== undefined) {
-        query += ` , bio = $${paramCount}`;
+        updates.push(`bio = $${paramCount}`);
         params.push(bio);
         paramCount++;
       }
       if (profile_picture !== undefined) {
-        query += ` , profile_picture = $${paramCount}`;
+        updates.push(`profile_picture = $${paramCount}`);
         params.push(profile_picture);
         paramCount++;
       }
       if (username !== undefined) {
-        query += ` , username = $${paramCount}`;
+        updates.push(`username = $${paramCount}`);
         params.push(username);
         paramCount++;
       }
 
-      query += ` WHERE id = $${paramCount} RETURNING id, username, email, profile_picture, bio`;
+      if (updates.length === 0) {
+         res.status(400).json({ error: 'No fields to update' });
+         return;
+      }
+
+      const query = `UPDATE users SET ${updates.join(', ')} WHERE id = $${paramCount} RETURNING id, username, email, profile_picture, bio`;
       params.push(userId);
 
       const result = await client.query(query, params);
@@ -134,7 +141,11 @@ export const updateProfile = async (req: Request, res: Response): Promise<void> 
 
     } catch (err: any) {
       console.error('Error updating profile:', err);
-      res.status(500).json({ error: err.message ?? 'Internal server error' });
+      if (err.code === '23505') { // Unique violation
+          res.status(409).json({ error: 'Username already taken' });
+      } else {
+          res.status(500).json({ error: err.message ?? 'Internal server error' });
+      }
     } finally {
       client.release();
     }
@@ -144,8 +155,118 @@ export const updateProfile = async (req: Request, res: Response): Promise<void> 
   }
 };
 
+export const followUser = async (req: Request, res: Response) => {
+    try {
+        if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
+        const followerId = (req.user as any).id;
+        const followingId = parseInt(req.params.id);
+
+        if (followerId === followingId) {
+            return res.status(400).json({ error: 'Cannot follow yourself' });
+        }
+
+        await UserModel.followUser(followerId, followingId);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to follow user', details: error });
+    }
+};
+
+export const unfollowUser = async (req: Request, res: Response) => {
+    try {
+        if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
+        const followerId = (req.user as any).id;
+        const followingId = parseInt(req.params.id);
+
+        await UserModel.unfollowUser(followerId, followingId);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to unfollow user', details: error });
+    }
+};
+
+export const getFollowers = async (req: Request, res: Response) => {
+    try {
+        const userId = parseInt(req.params.id);
+        const followers = await UserModel.getFollowers(userId);
+        res.json(followers);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch followers', details: error });
+    }
+};
+
+export const getFollowing = async (req: Request, res: Response) => {
+    try {
+        const userId = parseInt(req.params.id);
+        const following = await UserModel.getFollowing(userId);
+        res.json(following);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch following', details: error });
+    }
+};
+
+export const getFollowStatus = async (req: Request, res: Response) => {
+    try {
+        const userId = parseInt(req.params.id);
+        const currentUserId = req.user ? (req.user as any).id : null;
+        
+        if (!currentUserId) {
+             return res.json({ isFollowing: false });
+        }
+
+        const isFollowing = await UserModel.isFollowing(currentUserId, userId);
+        res.json({ isFollowing });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch follow status', details: error });
+    }
+};
+
+export const getFollowCounts = async (req: Request, res: Response) => {
+    try {
+        const userId = parseInt(req.params.id);
+        const counts = await UserModel.getFollowCounts(userId);
+        res.json(counts);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch follow counts', details: error });
+    }
+};
+
+export const getPublicProfile = async (req: Request, res: Response) => {
+    try {
+        const userId = parseInt(req.params.id);
+        const user = await UserModel.findUserById(userId);
+        if (!user) {
+            res.status(404).json({ error: 'User not found' });
+            return;
+        }
+
+        const counts = await UserModel.getFollowCounts(userId);
+        const posts = await PostModel.getUserPublishedPosts(userId);
+
+        res.json({
+            user: {
+                id: user.id,
+                username: user.username,
+                bio: user.bio,
+                avatar: user.profile_picture
+            },
+            stats: counts,
+            posts
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch profile', details: error });
+    }
+};
+
 export default {
   createUser,
   verify,
   updateProfile,
+  followUser,
+  unfollowUser,
+  getFollowers,
+  getFollowing,
+  getFollowStatus,
+  getFollowCounts,
+  getPublicProfile
 };

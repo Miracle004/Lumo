@@ -6,6 +6,7 @@ const router = Router();
 
 router.use(ensureAuthenticated);
 
+router.get('/', NotificationController.getNotifications);
 router.get('/count', NotificationController.getNotificationCount);
 router.post('/mark-read', NotificationController.markNotificationsRead);
 

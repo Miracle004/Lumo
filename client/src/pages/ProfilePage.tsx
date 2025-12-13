@@ -1,93 +1,169 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toastService } from '../services/toastService';
-import './Auth.css'; 
+import { uploadImage } from '../services/uploadService';
+import { Camera, LogOut } from 'lucide-react';
+import './ProfilePage.css';
 
 const ProfilePage: React.FC = () => {
-  const { user, logout, login } = useAuth(); // Destructure login from useAuth
+  const { user, login, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const [isEditingBio, setIsEditingBio] = useState(false);
-  const [bioText, setBioText] = useState(user?.bio || '');
+  
+  const [username, setUsername] = useState('');
+  const [bio, setBio] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [stats, setStats] = useState({ followers: 0, following: 0 });
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!user) {
+    if (!isAuthenticated) {
       navigate('/login');
-    } else {
-      setBioText(user.bio || ''); // Initialize bioText when user loads
+    } else if (user) {
+      setUsername(user.username || '');
+      setBio(user.bio || '');
+      setAvatarUrl(user.avatar || '');
+      
+      axios.get(`/user/${user.id}/follow-counts`)
+           .then(res => setStats(res.data))
+           .catch(console.error);
     }
-  }, [user, navigate]);
+  }, [user, isAuthenticated, navigate]);
 
-  const handleSaveBio = async () => {
-    try {
-      const response = await axios.put('/user/profile', { bio: bioText });
-      // Assuming the API returns the updated user object
-      login(response.data.user); // Update the user in AuthContext
-      setIsEditingBio(false);
-      toastService.success('Bio updated successfully!');
-    } catch (error) {
-      console.error('Failed to update bio:', error);
-      toastService.error('Failed to update bio.');
-    }
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      try {
+          const url = await uploadImage(file);
+          setAvatarUrl(url); // Preview update
+      } catch (error) {
+          console.error('Failed to upload avatar:', error);
+          toastService.error('Failed to upload image.');
+      }
   };
 
-  const handleCancelEdit = () => {
-    setBioText(user?.bio || ''); // Revert to original bio
-    setIsEditingBio(false);
+  const handleSave = async () => {
+      if (!username.trim()) {
+          toastService.error('Username cannot be empty.');
+          return;
+      }
+      
+      setIsSaving(true);
+      try {
+          const response = await axios.put('/user/profile', {
+              username,
+              bio,
+              profile_picture: avatarUrl
+          });
+          
+          const updatedUser = response.data.user;
+          // Ensure avatar is mapped correctly for context
+          const userForContext = {
+              ...user!,
+              ...updatedUser,
+              avatar: updatedUser.profile_picture || updatedUser.avatar || user?.avatar
+          };
+          
+          login(userForContext); // Update context
+          toastService.success('Profile updated successfully!');
+      } catch (err: any) {
+          console.error('Failed to update profile:', err);
+          toastService.error(err.response?.data?.error || 'Failed to update profile.');
+      } finally {
+          setIsSaving(false);
+      }
   };
 
-  if (!user) {
-    return <div>Loading profile...</div>;
-  }
+  if (!user) return <div>Loading profile...</div>;
 
   return (
-    <div className="auth-page">
-      <div className="auth-card" style={{ maxWidth: '600px' }}>
-        <div className="auth-header">
-          <img 
-            src={user.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80"} 
-            alt="Profile" 
-            style={{ width: '100px', height: '100px', borderRadius: '50%', marginBottom: '1rem' }}
-          />
-          <h1>{user.username}</h1>
-          <p>{user.email}</p>
-        </div>
+    <div className="profile-container">
+      <header className="profile-header">
+        <h1>Profile Settings</h1>
+      </header>
 
-        <div className="form-group" style={{ textAlign: 'left' }}>
-            <h3>Bio</h3>
-            {isEditingBio ? (
-                <>
-                    <textarea
-                        value={bioText}
-                        onChange={(e) => setBioText(e.target.value)}
-                        rows={5}
-                        style={{ width: '100%', padding: '0.5rem', border: '1px solid var(--border-color)', borderRadius: '4px', marginBottom: '0.5rem', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}
-                        placeholder="Tell us about yourself..."
-                    ></textarea>
-                    <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                        <button onClick={handleCancelEdit} className="btn btn-secondary">Cancel</button>
-                        <button onClick={handleSaveBio} className="btn btn-primary">Save</button>
-                    </div>
-                </>
-            ) : (
-                <>
-                    <p>{user.bio || 'No bio yet.'}</p>
-                    <button onClick={() => setIsEditingBio(true)} className="btn btn-secondary" style={{ marginTop: '0.5rem' }}>
-                        Edit Bio
-                    </button>
-                </>
-            )}
-        </div>
+      <div className="profile-content">
+          <div className="avatar-section">
+              <div className="avatar-wrapper">
+                  <img 
+                    src={avatarUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80"} 
+                    alt="Profile" 
+                    className="profile-avatar" 
+                  />
+                  <label htmlFor="avatar-upload" className="avatar-upload-label" title="Change Profile Picture">
+                      <Camera size={18} />
+                  </label>
+                  <input 
+                    id="avatar-upload" 
+                    type="file" 
+                    ref={fileInputRef} 
+                    onChange={handleAvatarUpload} 
+                    style={{ display: 'none' }} 
+                    accept="image/*"
+                  />
+              </div>
+              <div className="avatar-info">
+                  <h3>{user.username}</h3>
+                  <div className="profile-stats" style={{display: 'flex', gap: '1rem', marginTop: '0.25rem', fontSize: '0.9rem', color: 'var(--text-secondary)'}}>
+                      <span><strong style={{color: 'var(--text-primary)'}}>{stats.followers}</strong> Followers</span>
+                      <span><strong style={{color: 'var(--text-primary)'}}>{stats.following}</strong> Following</span>
+                  </div>
+              </div>
+          </div>
 
-        {/* New Link to My Stories */}
-        <Link to="/my-stories" className="btn btn-secondary" style={{ marginTop: '1rem', width: '100%', display: 'block', textAlign: 'center', textDecoration: 'none' }}>
-            View My Stories
-        </Link>
+          <div className="profile-form">
+              <div className="form-group">
+                  <label htmlFor="username">Username</label>
+                  <input 
+                    id="username" 
+                    type="text" 
+                    value={username} 
+                    onChange={(e) => setUsername(e.target.value)} 
+                  />
+              </div>
 
-        <button onClick={logout} className="btn btn-primary" style={{ marginTop: '1rem', width: '100%' }}>
-          Sign Out
-        </button>
+              <div className="form-group">
+                  <label htmlFor="email">Email</label>
+                  <input 
+                    id="email" 
+                    type="email" 
+                    value={user.email} 
+                    disabled 
+                    title="Email cannot be changed."
+                  />
+              </div>
+
+              <div className="form-group">
+                  <label htmlFor="bio">Bio</label>
+                  <textarea 
+                    id="bio" 
+                    rows={4} 
+                    value={bio} 
+                    onChange={(e) => setBio(e.target.value)} 
+                    placeholder="Tell your story..."
+                  />
+              </div>
+
+              <div className="profile-actions">
+                  <button 
+                    className="btn btn-primary" 
+                    onClick={handleSave} 
+                    disabled={isSaving}
+                  >
+                    {isSaving ? 'Saving...' : 'Save Changes'}
+                  </button>
+              </div>
+          </div>
+      </div>
+
+      <div className="logout-section">
+          <button onClick={logout} className="btn-logout">
+              <LogOut size={16} style={{display: 'inline', marginRight: '8px'}} />
+              Sign Out
+          </button>
       </div>
     </div>
   );

@@ -6,6 +6,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import './index.css'
 import { ThemeProvider } from './context/ThemeContext'
 import { AuthProvider } from './context/AuthContext'
+import { NotificationProvider } from './context/NotificationContext' // Import NotificationProvider
 import Layout from './components/Layout/Layout'
 import HomePage from './pages/HomePage'
 import DashboardPage from './pages/DashboardPage'
@@ -16,7 +17,11 @@ import DraftsPage from './pages/DraftsPage'
 import MyPublishedPage from './pages/MyPublishedPage'
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
+import NotFoundPage from './pages/NotFoundPage'
 import axios from 'axios'
+import NotificationsPage from './pages/NotificationsPage';
+import SearchPage from './pages/SearchPage';
+import PublicProfilePage from './pages/PublicProfilePage';
 
 axios.defaults.withCredentials = true;
 
@@ -42,8 +47,16 @@ const router = createBrowserRouter([
         element: <HomePage />,
       },
       {
+        path: 'search',
+        element: <SearchPage />,
+      },
+      {
         path: 'dashboard',
         element: <DashboardPage />,
+      },
+      {
+        path: 'author/:id',
+        element: <PublicProfilePage />,
       },
       {
         path: 'profile',
@@ -81,6 +94,18 @@ const router = createBrowserRouter([
         path: 'signup',
         element: <SignupPage />,
       },
+      {
+        path: 'notifications',
+        element: <NotificationsPage />,
+      },
+      {
+        path: '404',
+        element: <NotFoundPage />,
+      },
+      {
+        path: '*',
+        element: <NotFoundPage />,
+      },
     ],
   },
 ])
@@ -88,10 +113,12 @@ const router = createBrowserRouter([
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AuthProvider>
-      <ThemeProvider>
-        <RouterProvider router={router} />
-        <ToastContainer />
-      </ThemeProvider>
+      <NotificationProvider>
+        <ThemeProvider>
+          <RouterProvider router={router} />
+          <ToastContainer />
+        </ThemeProvider>
+      </NotificationProvider>
     </AuthProvider>
   </StrictMode>,
 )

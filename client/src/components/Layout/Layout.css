@@ -49,6 +49,9 @@
   align-items: center;
   justify-content: center;
   transition: color 0.2s;
+  background: none;
+  border: none;
+  cursor: pointer;
 }
 
 .nav-icon-btn:hover {
@@ -58,6 +61,40 @@
 .nav-text-link {
     font-size: 0.95rem;
     font-weight: 500;
+}
+
+/* Search Bar */
+.search-bar-container {
+    display: flex;
+    align-items: center;
+    position: relative;
+    background-color: transparent;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+}
+
+.search-bar-container.active {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    padding-left: 0.5rem;
+}
+
+.search-input {
+    width: 0;
+    opacity: 0;
+    border: none;
+    background: transparent;
+    color: var(--text-primary);
+    outline: none;
+    transition: all 0.3s ease;
+    padding: 0;
+    font-size: 0.9rem;
+}
+
+.search-bar-container.active .search-input {
+    width: 200px;
+    opacity: 1;
+    padding: 0.4rem 0.5rem;
 }
 
 .profile-avatar {

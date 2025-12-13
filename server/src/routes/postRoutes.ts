@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import * as PostController from '../controllers/postController';
 import * as CollaborationController from '../controllers/collaborationController';
+import * as CommentController from '../controllers/commentController'; // Import CommentController
 import { ensureAuthenticated } from '../middleware/auth';
 
 const router = Router();
@@ -16,6 +17,7 @@ router.get('/bookmarks', ensureAuthenticated, PostController.getBookmarkedPosts)
 
 // --- 2. Public Routes ---
 router.get('/published', PostController.getPublicPosts);
+router.get('/search', PostController.searchPosts);
 // This generic route catches everything else (like UUIDs).
 // Since specific keywords above are already handled, this is safe.
 router.get('/:id', PostController.getPost); 
@@ -23,6 +25,8 @@ router.get('/:id', PostController.getPost);
 // --- 3. Authenticated Single Post Operations ---
 router.post('/:id/bookmark', ensureAuthenticated, PostController.bookmarkPost);
 router.delete('/:id/bookmark', ensureAuthenticated, PostController.unbookmarkPost);
+router.post('/:id/like', ensureAuthenticated, PostController.toggleLike);
+router.get('/:id/likes', PostController.getPostLikeStatus);
 router.put('/:id', ensureAuthenticated, PostController.updatePost);
 router.delete('/:id', ensureAuthenticated, PostController.deletePost);
 router.post('/:id/publish', ensureAuthenticated, PostController.publishPost);
@@ -31,5 +35,10 @@ router.post('/:id/publish', ensureAuthenticated, PostController.publishPost);
 router.post('/:id/share', ensureAuthenticated, CollaborationController.sharePost);
 router.get('/:id/collaborators', ensureAuthenticated, CollaborationController.getCollaborators);
 router.delete('/:id/collaborators/:userId', ensureAuthenticated, CollaborationController.removeCollaborator);
+
+// --- 5. Comments (Authenticated) ---
+router.post('/:id/comments', ensureAuthenticated, CommentController.addComment);
+router.get('/:id/comments', CommentController.getComments);
+router.delete('/:id/comments/:commentId', ensureAuthenticated, CommentController.deleteComment);
 
 export default router;

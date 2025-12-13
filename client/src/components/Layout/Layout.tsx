@@ -1,32 +1,48 @@
-import React, { useEffect, useState } from 'react';
-import { Outlet, Link } from 'react-router-dom';
-import { useTheme } from '../../context/ThemeContext';
-import { useAuth } from '../../context/AuthContext';
-import { Search, Bookmark, Leaf, Sun, Moon } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Search, Bell, Bookmark, Leaf, Sun, Moon, X } from 'lucide-react';
 import { ToastContainer } from 'react-toastify';
-import axios from 'axios';
 import 'react-toastify/dist/ReactToastify.css';
 import './Layout.css';
+import { useTheme } from '../../context/ThemeContext';
+import { useAuth } from '../../context/AuthContext';
+import { useNotification } from '../../context/NotificationContext';
+import { Link, Outlet, useNavigate } from 'react-router-dom';
 
 const Layout: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
   const { user, isAuthenticated } = useAuth();
-  const [notificationCount, setNotificationCount] = useState(0);
+  const { count: notificationCount } = useNotification();
+  
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const searchRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
+
+  const toggleSearch = () => {
+      setIsSearchOpen(!isSearchOpen);
+      if (!isSearchOpen) {
+          setTimeout(() => inputRef.current?.focus(), 100);
+      }
+  };
+
+  const handleSearch = () => {
+      if (searchQuery.trim()) {
+          navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+          setIsSearchOpen(false);
+          setSearchQuery('');
+      }
+  };
 
   useEffect(() => {
-    if (!isAuthenticated || !user) return;
-
-    // Fetch initial count
-    const fetchCount = async () => {
-        try {
-            const res = await axios.get('/api/notifications/count');
-            setNotificationCount(res.data.count);
-        } catch (error) {
-            console.error('Failed to fetch notifications', error);
-        }
-    };
-    fetchCount();
-  }, [isAuthenticated, user]); // Kept dependency simple as loop issue was likely socket related
+      const handleClickOutside = (event: MouseEvent) => {
+          if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+              setIsSearchOpen(false);
+          }
+      };
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   return (
     <div className="layout-container">
@@ -39,31 +55,55 @@ const Layout: React.FC = () => {
         </div>
         
         <div className="navbar-right">
-          <button className="nav-icon-btn" aria-label="Search">
-            <Search size={20} />
-          </button>
+          <div className={`search-bar-container ${isSearchOpen ? 'active' : ''}`} ref={searchRef}>
+              <input 
+                 ref={inputRef}
+                 className="search-input" 
+                 type="text" 
+                 placeholder="Search stories..." 
+                 value={searchQuery}
+                 onChange={(e) => setSearchQuery(e.target.value)}
+                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              />
+              <button className="nav-icon-btn" onClick={toggleSearch} aria-label="Search">
+                {isSearchOpen ? <X size={20} /> : <Search size={20} />}
+              </button>
+          </div>
           
           {isAuthenticated && (
             <Link to="/write" className="nav-icon-btn" aria-label="Write">
               <span className="nav-text-link">Write</span>
             </Link>
           )}
+
+          {isAuthenticated && (
+            <Link to="/dashboard" className="nav-icon-btn" aria-label="Dashboard">
+              <span className="nav-text-link">Dashboard</span>
+            </Link>
+          )}
           
-          <Link to="/drafts" className="nav-icon-btn" aria-label="Bookmarks" style={{ position: 'relative' }}>
+          {isAuthenticated && ( // Notifications link
+            <Link to="/notifications" className="nav-icon-btn" aria-label="Notifications" style={{ position: 'relative' }}>
+              <Bell size={20} />
+              {notificationCount > 0 && (
+                  <span className="notification-badge" style={{
+                      position: 'absolute',
+                      top: '-5px',
+                      right: '-5px',
+                      backgroundColor: 'red',
+                      color: 'white',
+                      borderRadius: '50%',
+                      padding: '2px 5px',
+                      fontSize: '10px',
+                      fontWeight: 'bold'
+                  }}>{notificationCount}</span>
+              )}
+            </Link>
+          )}
+
+          {/* Bookmarks should still link to drafts page for saved items */}
+          <Link to="/drafts" className="nav-icon-btn" aria-label="Bookmarks">
             <Bookmark size={20} />
-            {notificationCount > 0 && (
-                <span className="notification-badge" style={{
-                    position: 'absolute',
-                    top: '-5px',
-                    right: '-5px',
-                    backgroundColor: 'red',
-                    color: 'white',
-                    borderRadius: '50%',
-                    padding: '2px 5px',
-                    fontSize: '10px',
-                    fontWeight: 'bold'
-                }}>{notificationCount}</span>
-            )}
           </Link>
           
           <button onClick={toggleTheme} className="nav-icon-btn theme-toggle" aria-label="Toggle theme">

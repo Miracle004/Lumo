@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext';
 import { Share2, X, Trash2 } from 'lucide-react';
 import { toastService } from '../services/toastService';
 import './DraftsPage.css';
@@ -14,6 +15,7 @@ interface Post {
   author_avatar?: string;
   cover_image_url?: string;
   is_viewed?: boolean;
+  permission?: 'edit' | 'comment' | 'view'; // Added for shared drafts
 }
 
 const DraftsPage: React.FC = () => {
@@ -24,6 +26,7 @@ const DraftsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { isAuthenticated } = useAuth();
+  const { resetCount } = useNotification();
   
   // Share Modal State
   const [showShareModal, setShowShareModal] = useState(false);
@@ -81,10 +84,11 @@ const DraftsPage: React.FC = () => {
                .then(() => {
                   // Optimistically update local state to clear badges immediately
                   setSharedDrafts(prev => prev.map(d => ({ ...d, is_viewed: true })));
+                  resetCount(); // Reset global notification count
                })
                .catch(err => console.error('Failed to mark notifications read', err));
       }
-  }, [isAuthenticated, activeTab]);
+  }, [isAuthenticated, activeTab, resetCount]);
 
   const openShareModal = (e: React.MouseEvent, draftId: string) => {
       e.preventDefault(); // Prevent Link navigation
@@ -232,9 +236,12 @@ const DraftsPage: React.FC = () => {
             {activeTab === 'shared' && (
               sharedDrafts.length > 0 ? (
                 sharedDrafts.map(draft => (
-                  <Link to={`/write/${draft.id}`} key={draft.id} className="draft-card">
+                  <Link to={`/write/${draft.id}`} key={draft.id} className={`draft-card ${!draft.is_viewed ? 'unread-draft' : ''}`}>
                     <h3>{draft.title || 'Untitled Draft'}</h3>
                     <p>Author: {draft.author_name}</p>
+                    {draft.permission && (
+                      <span className="draft-permission-tag">Your role: {draft.permission.charAt(0).toUpperCase() + draft.permission.slice(1)}</span>
+                    )}
                     <p>Last edited: {new Date(draft.updated_at!).toLocaleString()}</p>
                   </Link>
                 ))

@@ -5,10 +5,16 @@ import * as CollaboratorModel from '../models/Collaborator';
 export const createDraft = async (req: Request, res: Response) => {
     try {
         if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
-        const { title, content } = req.body;
+        const { title, content, tags } = req.body;
         const authorId = (req.user as any).id;
 
         const post = await PostModel.createPost(authorId, title, content);
+
+        if (tags && Array.isArray(tags)) {
+            await PostModel.setPostTags(post.id, tags);
+            post.tags = tags;
+        }
+
         res.status(201).json(post);
     } catch (error) {
         res.status(500).json({ error: 'Failed to create draft', details: error });
@@ -78,7 +84,7 @@ export const getPost = async (req: Request, res: Response) => {
 export const updatePost = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const { title, content, coverImageUrl } = req.body;
+        const { title, content, coverImageUrl, tags } = req.body;
         
         if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
         const userId = (req.user as any).id;
@@ -102,6 +108,12 @@ export const updatePost = async (req: Request, res: Response) => {
         }
 
         const updatedPost = await PostModel.updatePost(id, title, content, coverImageUrl);
+
+        if (tags && Array.isArray(tags)) {
+            await PostModel.setPostTags(id, tags);
+            updatedPost.tags = tags;
+        }
+
         res.json(updatedPost);
 
     } catch (error) {
@@ -151,7 +163,8 @@ export const publishPost = async (req: Request, res: Response) => {
         if (!post) return res.status(404).json({ error: 'Post not found' });
 
         if (post.author_id !== userId) {
-            return res.status(403).json({ error: 'Only the author can publish this post' });
+            const username = (req.user as any).username || 'User';
+            return res.status(403).json({ error: `${username} does not have permission to publish this blog` });
         }
 
         // Calculate read time (simple approximation: 200 words per minute)
@@ -227,5 +240,58 @@ export const getBookmarkedPosts = async (req: Request, res: Response) => {
         res.json(bookmarks);
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch bookmarks', details: error });
+    }
+};
+
+export const toggleLike = async (req: Request, res: Response) => {
+    try {
+        if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
+        const userId = (req.user as any).id;
+        const { id } = req.params;
+
+        const isLiked = await PostModel.hasUserLikedPost(userId, id);
+
+        if (isLiked) {
+            await PostModel.unlikePost(userId, id);
+        } else {
+            await PostModel.likePost(userId, id);
+        }
+
+        const newCount = await PostModel.getPostLikes(id);
+        res.json({ success: true, isLiked: !isLiked, count: newCount });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to toggle like', details: error });
+    }
+};
+
+export const getPostLikeStatus = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user ? (req.user as any).id : null;
+
+        const count = await PostModel.getPostLikes(id);
+        let isLiked = false;
+
+        if (userId) {
+            isLiked = await PostModel.hasUserLikedPost(userId, id);
+        }
+
+        res.json({ count, isLiked });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch like status', details: error });
+    }
+};
+
+export const searchPosts = async (req: Request, res: Response) => {
+    try {
+        const { q } = req.query;
+        if (!q || typeof q !== 'string') {
+            return res.status(400).json({ error: 'Search query is required' });
+        }
+
+        const posts = await PostModel.searchPosts(q);
+        res.json(posts);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to search posts', details: error });
     }
 };

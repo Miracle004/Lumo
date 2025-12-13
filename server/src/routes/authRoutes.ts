@@ -1,5 +1,15 @@
 import { Router } from "express";
-import { createUser, updateProfile } from "../controllers/userController";
+import { 
+    createUser, 
+    updateProfile,
+    followUser,
+    unfollowUser,
+    getFollowers,
+    getFollowing,
+    getFollowStatus,
+    getFollowCounts,
+    getPublicProfile
+} from "../controllers/userController";
 import passport from "passport";
 import { Request, Response, NextFunction } from "express";
 
@@ -97,5 +107,22 @@ router.put('/user/profile', (req, res, next) => {
     }
     updateProfile(req, res);
 });
+
+// Follow/Unfollow
+router.post('/user/:id/follow', (req, res, next) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ message: 'Unauthorized' });
+    followUser(req, res);
+});
+router.delete('/user/:id/follow', (req, res, next) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ message: 'Unauthorized' });
+    unfollowUser(req, res);
+});
+
+// User Social Graph
+router.get('/user/:id/followers', getFollowers);
+router.get('/user/:id/following', getFollowing);
+router.get('/user/:id/follow-status', getFollowStatus);
+router.get('/user/:id/follow-counts', getFollowCounts);
+router.get('/user/:id/profile', getPublicProfile);
 
 export default router;

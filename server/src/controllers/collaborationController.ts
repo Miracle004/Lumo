@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import * as CollaboratorModel from '../models/Collaborator';
 import * as UserModel from '../models/User';
 import * as PostModel from '../models/Post';
+import * as NotificationModel from '../models/Notification'; // Import NotificationModel
 import { sendInviteEmail } from '../services/emailService';
 import { io } from '../server';
 
@@ -17,6 +18,10 @@ export const sharePost = async (req: Request, res: Response) => {
         const post = await PostModel.getPostById(id);
         if (!post) return res.status(404).json({ error: 'Post not found' });
 
+        if (post.author_id !== inviterId) {
+            return res.status(403).json({ error: 'Only the author can invite collaborators' });
+        }
+
         const results = [];
         for (const email of emails) {
             const user = await UserModel.findUserByEmail(email);
@@ -28,16 +33,21 @@ export const sharePost = async (req: Request, res: Response) => {
                     results.push(collaborator);
                     
                     // Send Email
-                    // Using post.title directly might need handling if it's null
                     const postTitle = post.title || 'Untitled Draft';
                     sendInviteEmail(email, inviterName, postTitle, id);
 
+                    // Create Persistent Notification
+                    const message = `You have been invited to ${permission} "${postTitle}"`;
+                    const notification = await NotificationModel.createNotification(
+                        user.id,        // Target: Invited User
+                        inviterId,      // Actor: Inviter (Author)
+                        id,             // Post ID
+                        'invite',
+                        message
+                    );
+
                     // Send Real-time Notification
-                    io.to(`user-${user.id}`).emit('notification', { 
-                        type: 'invite', 
-                        message: `You have been invited to edit "${postTitle}"`,
-                        postId: id
-                    });
+                    io.to(`user-${user.id}`).emit('new-notification', notification);
                 }
             }
         }

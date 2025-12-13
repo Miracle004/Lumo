@@ -55,6 +55,11 @@
   border-color: var(--accent);
 }
 
+.unread-draft {
+  border-left: 4px solid var(--accent);
+  background-color: var(--bg-secondary); /* Ensure it stands out if different from bg-primary */
+}
+
 .draft-card h3 {
   margin-bottom: 0.5rem;
   font-size: 1.25rem;
@@ -64,4 +69,16 @@
 .draft-card p {
   color: var(--text-secondary);
   font-size: 0.9rem;
+}
+
+.draft-permission-tag {
+  background-color: var(--primary-color-light);
+  color: var(--primary-color-dark);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-left: 0.5rem;
+  display: inline-block;
+  margin-bottom: 0.5rem;
 }

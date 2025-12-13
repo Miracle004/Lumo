@@ -24,6 +24,16 @@
   margin-right: auto; /* Push others to right */
 }
 
+.user-permission-tag {
+  background-color: var(--primary-color-light);
+  color: var(--primary-color-dark);
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin-right: 1rem;
+}
+
 .btn-draft {
   background: none;
   border: 1px solid var(--border-color);
@@ -152,6 +162,66 @@
     background-color: rgba(0, 0, 0, 0.7);
 }
 
+/* Tags Input */
+.tags-input-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.tags-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.tag-chip {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-primary);
+}
+
+.tag-chip button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    color: var(--text-secondary);
+}
+
+.tag-chip button:hover {
+    color: #ef4444;
+}
+
+.tag-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-secondary);
+}
+
+.tag-input {
+    border: none;
+    background: transparent;
+    outline: none;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    flex: 1;
+    font-family: inherit;
+}
+
+.tag-input::placeholder {
+    color: var(--text-muted);
+}
+
 .editor-container {
     min-height: 500px;
 }
@@ -243,4 +313,106 @@
   align-items: center;
   padding: 0.8rem 0;
   border-bottom: 1px solid var(--border-color);
+}
+
+/* Comments Section Styles */
+.comments-section {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.comments-section h3 {
+  font-size: 1.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.comment-input-area {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.comment-input-area textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 1rem;
+  resize: vertical;
+}
+
+.comment-input-area textarea::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+.comment-input-area button {
+  align-self: flex-end;
+  padding: 0.75rem 1.5rem;
+}
+
+.comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.comment-item {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  position: relative;
+}
+
+.comment-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.comment-meta strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.comment-meta span {
+  font-size: 0.8rem;
+}
+
+.delete-comment-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0;
+  margin-left: auto; /* Push to the right */
+  display: flex;
+  align-items: center;
+  transition: color 0.2s;
+}
+
+.delete-comment-btn:hover {
+  color: var(--primary-color-dark); /* Or a red color for delete */
+}
+
+.comment-content {
+  color: var(--text-primary);
+  line-height: 1.5;
+  margin: 0;
+  padding-top: 0.5rem;
 }

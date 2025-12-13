@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Bookmark } from 'lucide-react';
+import { useLocation, Link } from 'react-router-dom';
 import axios from 'axios';
+import { Bookmark } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import './HomePage.css';
-
-const CATEGORIES = ['Latest', 'Trending', 'Design', 'Mindfulness', 'Productivity', 'Tech'];
+import { getPlainText } from '../utils/textUtils';
+import './HomePage.css'; // Reuse HomePage styles
 
 interface Post {
   id: string;
@@ -14,46 +13,49 @@ interface Post {
   cover_image_url: string;
   author_name: string;
   author_avatar: string;
-  author_id: number;
   published_at: string;
   read_time: number;
-  // UI helpers
+  tags?: string[];
   type?: string;
   height?: string;
   excerpt?: string;
 }
 
-import { getPlainText } from '../utils/textUtils';
-
-const HomePage: React.FC = () => {
-  const [activeCategory, setActiveCategory] = useState('Latest');
+const SearchPage: React.FC = () => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const query = searchParams.get('q') || '';
   const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     const fetchPosts = async () => {
+      setLoading(true);
       try {
-        const response = await axios.get('/api/posts/published');
+        if (!query) {
+            setPosts([]);
+            setLoading(false);
+            return;
+        }
+        const response = await axios.get(`/api/posts/search?q=${encodeURIComponent(query)}`);
         // Transform API data to UI data
         const mappedPosts = response.data.map((p: any) => ({
           ...p,
-          type: 'standard', // Default for now
-          height: 'standard', // Fixed height for consistency
+          type: 'standard',
+          height: 'standard',
           excerpt: getPlainText(p.content).substring(0, 100) + (getPlainText(p.content).length > 100 ? '...' : ''),
-          date: new Date(p.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-          image: p.cover_image_url,
-          authorAvatar: p.author_avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80"
+          author_avatar: p.author_avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80"
         }));
         setPosts(mappedPosts);
       } catch (error) {
-        console.error('Failed to fetch posts:', error);
+        console.error('Failed to search posts:', error);
       } finally {
         setLoading(false);
       }
     };
     fetchPosts();
-  }, []);
+  }, [query]);
 
   const handleBookmark = async (e: React.MouseEvent, post: Post) => {
     e.preventDefault(); // Prevent navigation
@@ -80,31 +82,15 @@ const HomePage: React.FC = () => {
   };
 
   return (
-    <div className="home-container">
-      <section className="hero-section">
-        <h1 className="hero-heading">Discover clarity<br />in chaos.</h1>
-        <p className="hero-subheading">Stories about minimalism, design, and finding peace.</p>
-      </section>
-
-      <section className="category-section">
-        <div className="category-scroll">
-          {CATEGORIES.map((cat) => (
-            <button
-              key={cat}
-              className={`category-pill ${activeCategory === cat ? 'active' : ''}`}
-              onClick={() => setActiveCategory(cat)}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-      </section>
-
-      <section className="masonry-grid">
-        {loading ? (
-           <p style={{ textAlign: 'center', width: '100%' }}>Loading stories...</p>
-        ) : (
-          posts.map((post) => (
+    <div className="home-container" style={{paddingTop: '2rem'}}>
+      <h1 style={{marginBottom: '2rem', paddingLeft: '1rem', fontSize: '2rem', fontWeight: 'bold'}}>Search Results for "{query}"</h1>
+      {loading ? (
+         <p style={{paddingLeft: '1rem'}}>Searching...</p>
+      ) : posts.length === 0 ? (
+         <p style={{paddingLeft: '1rem'}}>No stories found matching your search.</p>
+      ) : (
+        <section className="masonry-grid">
+          {posts.map((post) => (
             <Link to={`/read/${post.id}`} key={post.id} className={`grid-item ${post.type} ${post.height}`}>
               <article className="card">
                 {post.cover_image_url && (
@@ -116,28 +102,18 @@ const HomePage: React.FC = () => {
                 <div className="card-content">
                     {post.cover_image_url && (
                         <div className="author-overlap">
-                            <Link to={`/author/${post.author_id}`} onClick={(e) => e.stopPropagation()}>
-                                <img src={post.author_avatar} alt={post.author_name} />
-                            </Link>
+                            <img src={post.author_avatar} alt={post.author_name} />
                         </div>
                     )}
                     
                     {!post.cover_image_url && post.author_avatar && (
                         <div className="author-inline">
-                            <Link to={`/author/${post.author_id}`} onClick={(e) => e.stopPropagation()} style={{display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none', color: 'inherit'}}>
-                                <img src={post.author_avatar} alt={post.author_name} />
-                                <span>{post.author_name}</span>
-                            </Link>
+                            <img src={post.author_avatar} alt={post.author_name} />
+                            <span>{post.author_name}</span>
                         </div>
                     )}
                     
-                    {post.cover_image_url && (
-                        <div className="author-name-below">
-                            <Link to={`/author/${post.author_id}`} onClick={(e) => e.stopPropagation()} style={{textDecoration: 'none', color: 'inherit'}}>
-                                {post.author_name}
-                            </Link>
-                        </div>
-                    )}
+                    {post.cover_image_url && <div className="author-name-below">{post.author_name}</div>}
 
                     <h3 className="card-title">{post.title}</h3>
                     {post.excerpt && <p className="card-excerpt">{post.excerpt}</p>}
@@ -159,11 +135,11 @@ const HomePage: React.FC = () => {
                 </div>
               </article>
             </Link>
-          ))
-        )}
-      </section>
+          ))}
+        </section>
+      )}
     </div>
   );
 };
 
-export default HomePage;
+export default SearchPage;

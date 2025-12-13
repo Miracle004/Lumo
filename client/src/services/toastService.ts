@@ -1,4 +1,4 @@
-import { toast, ToastOptions } from 'react-toastify';
+import { toast, type ToastOptions } from 'react-toastify';
 
 const defaultOptions: ToastOptions = {
   position: 'top-right',
@@ -17,7 +17,7 @@ export const toastService = {
       ...defaultOptions,
       ...options,
       className: 'toast-success',
-      progressBarClassName: 'toast-success-progress',
+      progressClassName: 'toast-success-progress',
     });
   },
   info: (message: string, options?: ToastOptions) => {
@@ -25,7 +25,7 @@ export const toastService = {
       ...defaultOptions,
       ...options,
       className: 'toast-info',
-      progressBarClassName: 'toast-info-progress',
+      progressClassName: 'toast-info-progress',
     });
   },
   error: (message: string, options?: ToastOptions) => {
@@ -33,7 +33,7 @@ export const toastService = {
       ...defaultOptions,
       ...options,
       className: 'toast-error',
-      progressBarClassName: 'toast-error-progress',
+      progressClassName: 'toast-error-progress',
     });
   },
   warn: (message: string, options?: ToastOptions) => {
@@ -41,7 +41,7 @@ export const toastService = {
       ...defaultOptions,
       ...options,
       className: 'toast-warn',
-      progressBarClassName: 'toast-warn-progress',
+      progressClassName: 'toast-warn-progress',
     });
   },
 };
