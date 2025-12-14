@@ -69,11 +69,13 @@
   border-color: var(--accent);
 }
 
-/* Masonry Grid */
+/* Masonry Grid (column-based masonry for natural flow)
+   Using CSS columns produces a true masonry flow where items
+   stack vertically and the next item fills available vertical space.
+*/
 .masonry-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 2rem;
+  column-width: 300px;
+  column-gap: 2rem;
 }
 
 @media (max-width: 640px) {
@@ -86,8 +88,10 @@
 }
 
 .grid-item {
-  display: block;
-  height: 100%;
+  display: inline-block; /* required for column flow */
+  width: 100%;
+  margin: 0 0 2rem; /* vertical spacing between items */
+  vertical-align: top;
 }
 
 /* Card Styles */
@@ -96,9 +100,15 @@
   border-radius: 12px;
   overflow: hidden;
   transition: transform 0.2s, box-shadow 0.2s;
-  height: 100%;
   display: flex;
   flex-direction: column;
+}
+
+/* Prevent cards from breaking across columns and keep each card whole */
+.card {
+  break-inside: avoid;
+  -webkit-column-break-inside: avoid;
+  -moz-column-break-inside: avoid;
 }
 
 .card:hover {

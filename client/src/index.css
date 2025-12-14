@@ -118,3 +118,10 @@ img {
 .Toastify__close-button:hover {
   opacity: 1;
 }
+
+/* Layout helper: center content with horizontal padding */
+.container {
+  max-width: var(--container-width);
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}

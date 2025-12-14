@@ -1,5 +1,8 @@
 .read-page-container {
+  padding-top: calc(var(--header-height) + 1.25rem); /* keep below fixed navbar */
   padding-bottom: 6rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .article-top-nav {
@@ -28,7 +31,7 @@
 
 /* Header */
 .article-header {
-  margin-bottom: 3rem;
+  margin: 0 auto 3rem;
   max-width: 800px; /* Narrower for reading */
 }
 
@@ -144,16 +147,19 @@
 
 /* Hero Image */
 .hero-image-container {
+  max-width: var(--container-width);
   width: 100%;
   height: 60vh; /* Tall hero */
-  margin-bottom: 4rem;
+  margin: 0 auto 4rem;
   overflow: hidden;
+  border-radius: 8px;
 }
 
 .hero-image-container img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
 }
 
 /* Content */
@@ -161,6 +167,7 @@
   max-width: 720px; /* Optimal reading width */
   position: relative;
   margin: 0 auto;
+  padding: 0 1rem; /* breathing room on small screens */
 }
 
 /* Typography mirroring RichTextEditor.css (.ProseMirror) */
