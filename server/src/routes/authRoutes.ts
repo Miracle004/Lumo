@@ -77,7 +77,11 @@ router.get('/auth/google/callback',
             return res.redirect('/login?error=session_save_failed');
         }
         // Redirect to frontend dashboard
-        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+        let frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+        // Remove trailing slash if present
+        if (frontendUrl.endsWith('/')) {
+            frontendUrl = frontendUrl.slice(0, -1);
+        }
         res.redirect(`${frontendUrl}/dashboard`);
     });
   }
