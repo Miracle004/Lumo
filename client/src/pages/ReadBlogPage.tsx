@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { Share2, Bookmark, MessageSquare, X as XIcon, Heart, Facebook, Twitter, MessageCircle, Copy, Trash2 } from 'lucide-react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { Share2, Bookmark, MessageSquare, X as XIcon, Heart, Facebook, Twitter, MessageCircle, Copy, Trash2, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { toastService } from '../services/toastService';
 import axios from 'axios';
@@ -24,6 +24,7 @@ interface Post {
 
 const ReadBlogPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [post, setPost] = useState<Post | null>(null);
   const { isAuthenticated, user } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -216,16 +217,17 @@ const ReadBlogPage: React.FC = () => {
 
   return (
     <div className="read-page-container">
-      {/* Breadcrumb / Category */}
+      {/* Back Navigation */}
       <div className="article-top-nav container">
-         <Link to="/" className="breadcrumb-link">Home</Link>
-         <span className="breadcrumb-separator">/</span>
-         <span className="breadcrumb-current">{post.category || 'Untitled'}</span>
+         <button onClick={() => navigate(-1)} className="back-nav-btn" aria-label="Go back">
+            <ArrowLeft size={20} />
+            <span>Back</span>
+         </button>
       </div>
 
       <article className="full-article">
         <header className="article-header container">
-            <h1 className="article-title">{post.title || 'Untitled'}</h1>
+            <h1 className="article-title">{post.title || ''}</h1>
             
             {post.tags && post.tags.length > 0 && (
                 <div className="article-tags">

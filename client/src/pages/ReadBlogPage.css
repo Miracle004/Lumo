@@ -1,8 +1,5 @@
 .read-page-container {
-  padding-top: calc(var(--header-height) + 1.25rem); /* keep below fixed navbar */
   padding-bottom: 6rem;
-  width: 100%;
-  box-sizing: border-box;
 }
 
 .article-top-nav {
@@ -29,10 +26,22 @@
   color: var(--text-primary);
 }
 
+.back-nav-btn{
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  margin-left: 32px;
+}
+
+
 /* Header */
 .article-header {
-  margin: 0 auto 3rem;
-  max-width: 800px; /* Narrower for reading */
+  margin-bottom: 3rem;
+  max-width: 800px; 
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0 1.5rem;
 }
 
 .article-title {
@@ -105,7 +114,7 @@
 .action-btn {
   color: var(--text-secondary);
   padding: 0.5rem;
-  border-radius: 50%; /* This might need adjustment for text + icon */
+  border-radius: 50%; 
   transition: all 0.2s;
   background: none;
   border: none;
@@ -147,33 +156,31 @@
 
 /* Hero Image */
 .hero-image-container {
-  max-width: var(--container-width);
   width: 100%;
-  height: 60vh; /* Tall hero */
-  margin: 0 auto 4rem;
+  height: 60vh; 
+  margin-bottom: 4rem;
   overflow: hidden;
-  border-radius: 8px;
 }
 
 .hero-image-container img {
-  width: 100%;
+  width: 60%;
   height: 100%;
+  margin: 0 auto;
   object-fit: cover;
-  display: block;
+  object-position: center;
 }
 
 /* Content */
 .article-content-wrapper {
-  max-width: 720px; /* Optimal reading width */
+  max-width: 720px; 
   position: relative;
   margin: 0 auto;
-  padding: 0 1rem; /* breathing room on small screens */
 }
 
 /* Typography mirroring RichTextEditor.css (.ProseMirror) */
 .article-body-content {
   color: var(--text-primary);
-  font-family: var(--font-family); /* Inherit from global */
+  font-family: var(--font-family); 
   text-align: left;
   line-height: 1.6;
   min-height: 300px;
@@ -279,7 +286,6 @@
   display: flex;
   gap: 0.5rem;
   box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-  /* Hidden in real app until selection, visible here for demo of "feature" */
   display: none; 
 }
 

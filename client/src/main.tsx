@@ -1,8 +1,6 @@
 import React, { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { createBrowserRouter, RouterProvider, useLocation } from 'react-router-dom'
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 import './index.css'
 import { ThemeProvider } from './context/ThemeContext'
 import { AuthProvider } from './context/AuthContext'
@@ -25,13 +23,19 @@ import PublicProfilePage from './pages/PublicProfilePage';
 
 axios.defaults.withCredentials = true;
 
+// Configure Axios base URL for separate frontend/backend hosting
+// Use VITE_API_BASE_URL environment variable if available (e.g., in production)
+// Otherwise, fall back to relative paths (for local development with Vite proxy)
+axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL || '';
+
 const GoogleCallback = () => {
   const location = useLocation();
   React.useEffect(() => {
-    // Forward the redirect to the backend server (port 3000) to complete the OAuth flow.
+    // Forward the redirect to the backend server to complete the OAuth flow.
     // We use window.location.href to break out of the React Router SPA context
     // and force a request to the backend server.
-    window.location.href = 'http://localhost:3000/auth/google/callback' + location.search;
+    const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+    window.location.href = `${apiUrl}/auth/google/callback${location.search}`;
   }, [location]);
 
   return <div style={{ display: 'flex', justifyContent: 'center', marginTop: '50px' }}>Verifying...</div>;
@@ -116,7 +120,6 @@ createRoot(document.getElementById('root')!).render(
       <NotificationProvider>
         <ThemeProvider>
           <RouterProvider router={router} />
-          <ToastContainer />
         </ThemeProvider>
       </NotificationProvider>
     </AuthProvider>

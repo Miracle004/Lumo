@@ -69,18 +69,22 @@
   border-color: var(--accent);
 }
 
-/* Masonry Grid (column-based masonry for natural flow)
-   Using CSS columns produces a true masonry flow where items
-   stack vertically and the next item fills available vertical space.
-*/
+/* Masonry Grid - True Masonry using CSS Columns */
 .masonry-grid {
-  column-width: 300px;
+  display: block;
+  column-count: 3;
   column-gap: 2rem;
+}
+
+@media (max-width: 1024px) {
+  .masonry-grid {
+    column-count: 2;
+  }
 }
 
 @media (max-width: 640px) {
   .masonry-grid {
-    grid-template-columns: 1fr;
+    column-count: 1;
   }
   .hero-heading {
     font-size: 3rem;
@@ -88,10 +92,10 @@
 }
 
 .grid-item {
-  display: inline-block; /* required for column flow */
+  display: inline-block;
   width: 100%;
-  margin: 0 0 2rem; /* vertical spacing between items */
-  vertical-align: top;
+  margin-bottom: 2rem;
+  break-inside: avoid;
 }
 
 /* Card Styles */
@@ -100,15 +104,9 @@
   border-radius: 12px;
   overflow: hidden;
   transition: transform 0.2s, box-shadow 0.2s;
+  height: auto; /* Content determines height */
   display: flex;
   flex-direction: column;
-}
-
-/* Prevent cards from breaking across columns and keep each card whole */
-.card {
-  break-inside: avoid;
-  -webkit-column-break-inside: avoid;
-  -moz-column-break-inside: avoid;
 }
 
 .card:hover {
@@ -257,4 +255,29 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+/* Load More Button */
+.load-more-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding: 2rem 0;
+}
+
+.load-more-btn {
+    padding: 0.8rem 2rem;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    border-radius: 2rem;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.load-more-btn:hover {
+    background-color: var(--border-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }

@@ -129,7 +129,7 @@ const SignupPage: React.FC = () => {
             ) : null}
           </div>
 
-          <button type="submit" className="btn btn-primary btn-block" disabled={formik.isSubmitting}>
+          <button type="submit" className="btn btn-primary btn-block auth-btn" disabled={formik.isSubmitting}>
             {formik.isSubmitting ? 'Creating Account...' : 'Sign Up'}
           </button>
         </form>

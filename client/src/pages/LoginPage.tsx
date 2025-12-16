@@ -98,7 +98,10 @@ const LoginPage: React.FC = () => {
           <button
             type="button"
             className="btn btn-secondary auth-btn google-btn"
-            onClick={() => window.location.href = '/auth/google'}
+            onClick={() => {
+                const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+                window.location.href = `${apiUrl}/auth/google`;
+            }}
           >
             <svg width="20" height="20" viewBox="0 0 24 24">
               <path
