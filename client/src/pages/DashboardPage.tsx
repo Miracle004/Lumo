@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { PenTool, FileText, User, BookOpen } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
+import Spinner from '../components/Spinner/Spinner';
 import './DashboardPage.css';
 
 const DashboardPage: React.FC = () => {
@@ -32,7 +33,7 @@ const DashboardPage: React.FC = () => {
   }, [user]);
 
   if (!isAuthenticated) {
-      return <div>Loading dashboard...</div>;
+      return <Spinner />;
   }
 
   return (

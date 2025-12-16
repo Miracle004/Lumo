@@ -5,6 +5,7 @@ import axios from 'axios';
 import { toastService } from '../services/toastService';
 import { uploadImage } from '../services/uploadService';
 import { Camera, LogOut } from 'lucide-react';
+import Spinner from '../components/Spinner/Spinner';
 import './ProfilePage.css';
 
 const fixImageUrl = (url: string) => {
@@ -85,7 +86,7 @@ const ProfilePage: React.FC = () => {
       }
   };
 
-  if (!user) return <div>Loading profile...</div>;
+  if (!user) return <Spinner />;
 
   return (
     <div className="profile-container">

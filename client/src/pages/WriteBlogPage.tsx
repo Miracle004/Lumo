@@ -10,6 +10,7 @@ import { useNotification } from '../context/NotificationContext'; // Import useN
 import { io } from 'socket.io-client';
 import { uploadImage } from '../services/uploadService';
 import { toastService } from '../services/toastService';
+import Spinner from '../components/Spinner/Spinner';
 import './WriteBlogPage.css';
 
 const fixImageUrl = (url: string) => {
@@ -398,7 +399,7 @@ const WriteBlogPage: React.FC = () => {
   };
 
   if (initialLoading || !isAuthenticated) {
-    return <div>Loading editor...</div>;
+    return <Spinner />;
   }
 
   if (postError) {

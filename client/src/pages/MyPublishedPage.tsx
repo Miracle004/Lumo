@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { toastService } from '../services/toastService';
 import { Trash2 } from 'lucide-react';
+import Spinner from '../components/Spinner/Spinner';
 import './DraftsPage.css'; // Reusing drafts styles
 
 interface Post {
@@ -53,7 +54,7 @@ const MyPublishedPage: React.FC = () => {
       }
   };
 
-  if (loading) return <div className="drafts-page">Loading...</div>;
+  if (loading) return <Spinner />;
   if (!isAuthenticated) return <div className="drafts-page">Please log in to view your stories.</div>;
 
   return (

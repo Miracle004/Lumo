@@ -5,6 +5,7 @@ import { useNotification } from '../context/NotificationContext';
 import { Link } from 'react-router-dom';
 import { toastService } from '../services/toastService';
 import { BellRing, MessageSquare, Mail, Link as LinkIcon } from 'lucide-react';
+import Spinner from '../components/Spinner/Spinner';
 import './NotificationsPage.css';
 
 interface Notification {
@@ -87,11 +88,7 @@ const NotificationsPage: React.FC = () => {
   }
 
   if (loading) {
-    return (
-      <div className="notifications-page-container">
-        <p>Loading notifications...</p>
-      </div>
-    );
+    return <Spinner />;
   }
 
   if (error) {

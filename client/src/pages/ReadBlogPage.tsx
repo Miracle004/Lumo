@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { toastService } from '../services/toastService';
 import axios from 'axios';
 import { getRenderableHTML } from '../utils/textUtils';
+import Spinner from '../components/Spinner/Spinner';
 import './ReadBlogPage.css';
 
 const fixImageUrl = (url: string | undefined) => {
@@ -230,7 +231,7 @@ const ReadBlogPage: React.FC = () => {
   };
 
   if (loading) {
-    return <div className="read-page-container">Loading post...</div>;
+    return <Spinner />;
   }
 
   if (error) {

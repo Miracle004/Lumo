@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 import { Share2, X, Trash2 } from 'lucide-react';
 import { toastService } from '../services/toastService';
+import Spinner from '../components/Spinner/Spinner';
 import './DraftsPage.css';
 
 interface Post {
@@ -198,7 +199,7 @@ const DraftsPage: React.FC = () => {
 
       <div className="drafts-list">
         {loading ? (
-          <p>Loading...</p>
+          <Spinner />
         ) : (
           <>
             {activeTab === 'myDrafts' && (

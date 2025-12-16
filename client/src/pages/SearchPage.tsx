@@ -4,6 +4,7 @@ import axios from 'axios';
 import { Bookmark } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getPlainText } from '../utils/textUtils';
+import Spinner from '../components/Spinner/Spinner';
 import './HomePage.css'; // Reuse HomePage styles
 
 const fixImageUrl = (url: string) => {
@@ -94,7 +95,7 @@ const SearchPage: React.FC = () => {
     <div className="home-container" style={{paddingTop: '2rem'}}>
       <h1 style={{marginBottom: '2rem', paddingLeft: '1rem', fontSize: '2rem', fontWeight: 'bold'}}>Search Results for "{query}"</h1>
       {loading ? (
-         <p style={{paddingLeft: '1rem'}}>Searching...</p>
+         <Spinner />
       ) : posts.length === 0 ? (
          <p style={{paddingLeft: '1rem'}}>No stories found matching your search.</p>
       ) : (

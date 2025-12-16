@@ -1,5 +1,6 @@
 import axios from 'axios';
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import Spinner from '../components/Spinner/Spinner';
 
 // Ensure cookies are sent with every request
 axios.defaults.withCredentials = true;
@@ -65,7 +66,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   if (loading) {
-      return <div>Loading authentication...</div>;
+      return <Spinner />;
   }
 
   return (

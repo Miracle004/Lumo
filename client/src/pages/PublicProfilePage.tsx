@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { toastService } from '../services/toastService';
 import { getPlainText } from '../utils/textUtils';
+import Spinner from '../components/Spinner/Spinner';
 import './PublicProfilePage.css';
 import './HomePage.css'; // For grid styles
 
@@ -140,7 +141,7 @@ const PublicProfilePage: React.FC = () => {
         }
     };
 
-    if (loading) return <div className="public-profile-container">Loading profile...</div>;
+    if (loading) return <Spinner />;
     if (!profile) return <div className="public-profile-container">User not found.</div>;
 
     return (
