@@ -7,6 +7,14 @@ import { uploadImage } from '../services/uploadService';
 import { Camera, LogOut } from 'lucide-react';
 import './ProfilePage.css';
 
+const fixImageUrl = (url: string) => {
+  if (!url) return url;
+  if (url.startsWith('http://localhost:3000')) {
+    return url.replace('http://localhost:3000', import.meta.env.VITE_API_URL || 'https://lumo-q0bg.onrender.com');
+  }
+  return url;
+};
+
 const ProfilePage: React.FC = () => {
   const { user, login, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
@@ -89,7 +97,7 @@ const ProfilePage: React.FC = () => {
           <div className="avatar-section">
               <div className="avatar-wrapper">
                   <img 
-                    src={avatarUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80"} 
+                    src={fixImageUrl(avatarUrl) || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80"} 
                     alt="Profile" 
                     className="profile-avatar" 
                   />

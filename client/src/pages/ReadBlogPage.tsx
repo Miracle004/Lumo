@@ -7,6 +7,19 @@ import axios from 'axios';
 import { getRenderableHTML } from '../utils/textUtils';
 import './ReadBlogPage.css';
 
+const fixImageUrl = (url: string | undefined) => {
+  if (!url) return url;
+  if (url.startsWith('http://localhost:3000')) {
+    return url.replace('http://localhost:3000', import.meta.env.VITE_API_URL || 'https://lumo-q0bg.onrender.com');
+  }
+  return url;
+};
+
+const fixHtmlContent = (html: string) => {
+  if (!html) return html;
+  return html.replace(/http:\/\/localhost:3000/g, import.meta.env.VITE_API_URL || 'https://lumo-q0bg.onrender.com');
+};
+
 interface Post {
   id: string;
   title: string;
@@ -46,7 +59,12 @@ const ReadBlogPage: React.FC = () => {
     const fetchPost = async () => {
       try {
         const response = await axios.get(`/api/posts/${id}`);
-        setPost(response.data);
+        const data = response.data;
+        // Fix URLs in the post data
+        data.cover_image_url = fixImageUrl(data.cover_image_url);
+        data.author_avatar = fixImageUrl(data.author_avatar);
+        data.content = fixHtmlContent(data.content);
+        setPost(data);
       } catch (err: any) {
         console.error('Failed to fetch post:', err);
         setError(err.response?.data?.message || 'Failed to load post. It might be a private draft.');
@@ -58,7 +76,11 @@ const ReadBlogPage: React.FC = () => {
     const fetchComments = async () => {
         try {
             const response = await axios.get(`/api/posts/${id}/comments`);
-            setComments(response.data);
+            const fixedComments = response.data.map((c: any) => ({
+                ...c,
+                avatar: fixImageUrl(c.avatar)
+            }));
+            setComments(fixedComments);
         } catch (err) {
             console.error('Failed to fetch comments:', err);
         }
@@ -100,7 +122,11 @@ const ReadBlogPage: React.FC = () => {
 
       try {
           const response = await axios.post(`/api/posts/${id}/comments`, { content: newComment });
-          setComments(prev => [response.data, ...prev]);
+          const newCommentData = {
+              ...response.data,
+              avatar: fixImageUrl(response.data.avatar)
+          };
+          setComments(prev => [newCommentData, ...prev]);
           setNewComment('');
           toastService.success('Comment added!');
       } catch (err: any) {

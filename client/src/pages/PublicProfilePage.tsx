@@ -7,6 +7,14 @@ import { getPlainText } from '../utils/textUtils';
 import './PublicProfilePage.css';
 import './HomePage.css'; // For grid styles
 
+const fixImageUrl = (url: string) => {
+  if (!url) return url;
+  if (url.startsWith('http://localhost:3000')) {
+    return url.replace('http://localhost:3000', import.meta.env.VITE_API_URL || 'https://lumo-q0bg.onrender.com');
+  }
+  return url;
+};
+
 interface Post {
   id: string;
   title: string;
@@ -139,7 +147,7 @@ const PublicProfilePage: React.FC = () => {
         <div className="public-profile-container">
             <header className="profile-header-section">
                 <img 
-                    src={profile.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80"} 
+                    src={fixImageUrl(profile.avatar) || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80"} 
                     alt={profile.username} 
                     className="public-avatar" 
                 />
@@ -199,7 +207,7 @@ const PublicProfilePage: React.FC = () => {
                                 <article className="card">
                                     {post.cover_image_url && (
                                         <div className="card-image-wrapper">
-                                            <img src={post.cover_image_url} alt={post.title || 'Article cover'} />
+                                            <img src={fixImageUrl(post.cover_image_url)} alt={post.title || 'Article cover'} />
                                         </div>
                                     )}
                                     <div className="card-content">
@@ -222,7 +230,7 @@ const PublicProfilePage: React.FC = () => {
                         {followersList.length > 0 ? followersList.map(user => (
                             <Link to={`/author/${user.id}`} key={user.id} className="user-list-item">
                                 <img 
-                                    src={user.profile_picture || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80"} 
+                                    src={fixImageUrl(user.profile_picture) || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80"} 
                                     alt={user.username} 
                                     className="user-list-avatar" 
                                 />
@@ -240,7 +248,7 @@ const PublicProfilePage: React.FC = () => {
                         {followingList.length > 0 ? followingList.map(user => (
                             <Link to={`/author/${user.id}`} key={user.id} className="user-list-item">
                                 <img 
-                                    src={user.profile_picture || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80"} 
+                                    src={fixImageUrl(user.profile_picture) || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80"} 
                                     alt={user.username} 
                                     className="user-list-avatar" 
                                 />

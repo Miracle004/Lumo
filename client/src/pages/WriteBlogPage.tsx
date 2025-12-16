@@ -12,6 +12,14 @@ import { uploadImage } from '../services/uploadService';
 import { toastService } from '../services/toastService';
 import './WriteBlogPage.css';
 
+const fixImageUrl = (url: string) => {
+  if (!url) return url;
+  if (url.startsWith('http://localhost:3000')) {
+    return url.replace('http://localhost:3000', import.meta.env.VITE_API_URL || 'https://lumo-q0bg.onrender.com');
+  }
+  return url;
+};
+
 interface Post {
   id: string;
   title: string;
@@ -221,7 +229,7 @@ const WriteBlogPage: React.FC = () => {
           formik.setValues({
             title: response.data.title || '',
             content: response.data.content || '',
-            imageUrl: response.data.cover_image_url || '',
+            imageUrl: fixImageUrl(response.data.cover_image_url) || '',
             tags: response.data.tags || [],
           });
           setIsNewPost(false);
@@ -466,7 +474,7 @@ const WriteBlogPage: React.FC = () => {
                     </button>
                 ) : (
                     <div className="cover-image-preview">
-                        <img src={formik.values.imageUrl} alt="Cover" />
+                        <img src={fixImageUrl(formik.values.imageUrl)} alt="Cover" />
                         {!isReadOnly && (
                             <button 
                                 type="button" 

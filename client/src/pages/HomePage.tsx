@@ -26,6 +26,14 @@ interface Post {
 
 import { getPlainText } from '../utils/textUtils';
 
+const fixImageUrl = (url: string) => {
+  if (!url) return url;
+  if (url.startsWith('http://localhost:3000')) {
+    return url.replace('http://localhost:3000', import.meta.env.VITE_API_URL || 'https://lumo-q0bg.onrender.com');
+  }
+  return url;
+};
+
 const HomePage: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState('Latest');
   const [posts, setPosts] = useState<Post[]>([]);
@@ -47,8 +55,9 @@ const HomePage: React.FC = () => {
         height: 'standard',
         excerpt: getPlainText(p.content).substring(0, 100) + (getPlainText(p.content).length > 100 ? '...' : ''),
         date: new Date(p.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        image: p.cover_image_url,
-        authorAvatar: p.author_avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80"
+        cover_image_url: fixImageUrl(p.cover_image_url),
+        image: fixImageUrl(p.cover_image_url),
+        authorAvatar: fixImageUrl(p.author_avatar) || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80"
       }));
 
       if (newPosts.length < limit) {
