@@ -16,6 +16,9 @@ import { Server } from 'socket.io';
 dotenv.config();
 
 const app = express();
+// Trust Proxy for Render/Vercel (Required for Secure Cookies)
+app.set('trust proxy', 1); 
+
 const httpServer = createServer(app); // Create HTTP server
 const PORT = process.env.PORT;
 const FRONTEND_URL = process.env.FRONTEND_URL;
