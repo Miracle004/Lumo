@@ -103,11 +103,11 @@ app.use((req: Request, res: Response) => {
 const startServer = async () => {
     try {
         // Test DB connection
-        await pool.query('SELECT NOW()');
-        console.log("Database connection successful");
-        console.log(`DB User: ${process.env.DB_USER}`);
-        console.log(`DB Host: ${process.env.DB_HOST}`);
-        console.log(`DB Name: ${process.env.DB_NAME}`);
+        // await pool.query('SELECT NOW()');
+        // console.log("Database connection successful");
+        // console.log(`DB User: ${process.env.DB_USER}`);
+        // console.log(`DB Host: ${process.env.DB_HOST}`);
+        // console.log(`DB Name: ${process.env.DB_NAME}`);
 
         httpServer.listen(PORT, () => {
             console.log(`App running on PORT: ${PORT}`);

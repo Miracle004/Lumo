@@ -153,6 +153,17 @@ export const getDashboardStats = async (req: Request, res: Response) => {
     }
 };
 
+// Helper to extract text from TipTap JSON
+const extractTextFromTipTap = (node: any): string => {
+    if (!node) return '';
+    if (typeof node === 'string') return node;
+    if (node.type === 'text' && node.text) return node.text;
+    if (node.content && Array.isArray(node.content)) {
+        return node.content.map(extractTextFromTipTap).join(' ');
+    }
+    return '';
+};
+
 export const publishPost = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
@@ -167,18 +178,15 @@ export const publishPost = async (req: Request, res: Response) => {
             return res.status(403).json({ error: `${username} does not have permission to publish this blog` });
         }
 
-        // Calculate read time (simple approximation: 200 words per minute)
-        // Assuming content is string or has a text field. 
-        // If content is JSON (Draft.js/TipTap), we need to extract text.
-        // For now, assuming simple calculation or default.
         let wordCount = 0;
         if (typeof post.content === 'string') {
             // Strip HTML tags for accurate word count
             const textContent = post.content.replace(/<[^>]*>/g, ' ');
             wordCount = textContent.split(/\s+/).filter(word => word.length > 0).length;
         } else if (post.content && typeof post.content === 'object') {
-             // Basic JSON handling (e.g. TipTap text extraction placeholder)
-             wordCount = JSON.stringify(post.content).split(/\s+/).length; 
+             // Proper TipTap text extraction
+             const textContent = extractTextFromTipTap(post.content);
+             wordCount = textContent.split(/\s+/).filter(word => word.length > 0).length;
         }
         
         // Average reading speed: 200 words per minute
@@ -197,8 +205,14 @@ export const getPublicPosts = async (req: Request, res: Response) => {
         const page = parseInt(req.query.page as string) || 1;
         const limit = parseInt(req.query.limit as string) || 10;
         const offset = (page - 1) * limit;
+        const filter = req.query.filter as string;
 
-        const posts = await PostModel.getPublishedPosts(limit, offset);
+        let posts;
+        if (filter === 'Trending') {
+            posts = await PostModel.getTrendingPosts(limit);
+        } else {
+            posts = await PostModel.getPublishedPosts(limit, offset);
+        }
         res.json(posts);
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch posts', details: error });

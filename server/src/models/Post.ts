@@ -125,6 +125,25 @@ export const getPublishedPosts = async (limit: number = 10, offset: number = 0):
     return result.rows;
 };
 
+export const getTrendingPosts = async (limit: number = 10, sinceHours: number = 24): Promise<Post[]> => {
+    const result = await pool.query(
+        `SELECT p.*, u.username as author_name, u.profile_picture as author_avatar,
+                COALESCE(array_agg(t.name) FILTER (WHERE t.name IS NOT NULL), '{}') as tags,
+                COUNT(l.user_id) as recent_likes
+         FROM posts p
+         JOIN users u ON p.author_id = u.id
+         LEFT JOIN post_tags pt ON p.id = pt.post_id
+         LEFT JOIN tags t ON pt.tag_id = t.id
+         LEFT JOIN likes l ON p.id = l.post_id AND l.created_at >= NOW() - ($2 * INTERVAL '1 hour')
+         WHERE p.status = 'published'
+         GROUP BY p.id, u.id
+         ORDER BY COUNT(l.user_id) DESC, p.published_at DESC
+         LIMIT $1`,
+        [limit, sinceHours]
+    );
+    return result.rows;
+};
+
 export const getUserPublishedPosts = async (userId: number): Promise<Post[]> => {
     const result = await pool.query(
         `SELECT p.*,
