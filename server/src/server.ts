@@ -17,7 +17,7 @@ dotenv.config();
 
 const app = express();
 const httpServer = createServer(app); // Create HTTP server
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT;
 const FRONTEND_URL = process.env.FRONTEND_URL;
 
 console.log(`Environment: ${process.env.NODE_ENV}`);
