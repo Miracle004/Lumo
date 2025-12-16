@@ -48,6 +48,7 @@ app.use(session({
     secret: process.env.SESSION_SECRET || "SOMETYPESHII", // Use env var
     resave: false,
     saveUninitialized: false, // Recommended: false
+    proxy: true, // Required for Heroku/Render/Vercel to set Secure cookies
     cookie: {
         secure: process.env.NODE_ENV === 'production', // Secure in production
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
