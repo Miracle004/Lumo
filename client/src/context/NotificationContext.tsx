@@ -34,7 +34,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   useEffect(() => {
     if (!isAuthenticated || !user) return;
 
-    const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:3000');
+    const socket = io(import.meta.env.VITE_API_BASE_URL);
     socket.emit('join-user', user.id);
 
     socket.on('new-notification', () => {

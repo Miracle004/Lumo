@@ -258,7 +258,7 @@ const WriteBlogPage: React.FC = () => {
     if (!id) return;
     
     // Connect to the specific post room
-    const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:3000');
+    const socket = io(import.meta.env.VITE_API_BASE_URL);
     
     socket.emit('join-post', id);
 

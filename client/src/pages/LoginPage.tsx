@@ -99,7 +99,7 @@ const LoginPage: React.FC = () => {
             type="button"
             className="btn btn-secondary auth-btn google-btn"
             onClick={() => {
-                const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+                const apiUrl = import.meta.env.VITE_API_BASE_URL;
                 window.location.href = `${apiUrl}/auth/google`;
             }}
           >

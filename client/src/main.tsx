@@ -34,7 +34,7 @@ const GoogleCallback = () => {
     // Forward the redirect to the backend server to complete the OAuth flow.
     // We use window.location.href to break out of the React Router SPA context
     // and force a request to the backend server.
-    const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+    const apiUrl = import.meta.env.VITE_API_BASE_URL;
     window.location.href = `${apiUrl}/auth/google/callback${location.search}`;
   }, [location]);
 
