@@ -2,6 +2,8 @@
   padding: 2rem;
   max-width: 900px;
   margin: 0 auto;
+  /* Ensure parent doesn't clip sticky elements */
+  overflow: visible; 
 }
 
 .write-form {
@@ -61,9 +63,7 @@
 
 .write-container {
   background-color: var(--bg-primary);
-  /* border: 1px solid var(--border-color); */
   border-radius: 8px;
-  /* padding: 2rem; */
 }
 
 .title-input-container {
@@ -72,13 +72,14 @@
 
 .title-input {
   width: 100%;
-  font-size: 2.5rem;
-  font-weight: 700;
   border: none;
-  outline: none;
-  background: transparent;
+  font-size: 3rem;
+  font-weight: 700;
   color: var(--text-primary);
-  font-family: inherit;
+  background: transparent;
+  outline: none;
+  padding: 0;
+  font-family: 'Times New Roman', Times, serif; 
 }
 
 .title-input::placeholder {
@@ -88,22 +89,6 @@
 
 .cover-image-input-container {
     margin-bottom: 2rem;
-}
-
-.title-input {
-    width: 100%;
-    border: none;
-    font-size: 3rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    background: transparent;
-    outline: none;
-    padding: 0;
-    font-family: 'Times New Roman', Times, serif; /* Or whatever serif font you prefer for titles */
-}
-
-.title-input::placeholder {
-    color: var(--text-muted);
 }
 
 .add-cover-btn {
@@ -219,11 +204,12 @@
 }
 
 .tag-input::placeholder {
-    color: var(--text-muted);
+    color: var(--text-secondary);
 }
 
 .editor-container {
     min-height: 500px;
+    /* Cleaned up: No extra sticky hacks needed here now */
 }
 
 .error-message {
@@ -400,14 +386,14 @@
   color: var(--text-secondary);
   cursor: pointer;
   padding: 0;
-  margin-left: auto; /* Push to the right */
+  margin-left: auto;
   display: flex;
   align-items: center;
   transition: color 0.2s;
 }
 
 .delete-comment-btn:hover {
-  color: var(--primary-color-dark); /* Or a red color for delete */
+  color: var(--primary-color-dark);
 }
 
 .comment-content {
@@ -415,4 +401,52 @@
   line-height: 1.5;
   margin: 0;
   padding-top: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .title-input {
+    font-size: 2.25rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .write-actions {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .saving-indicator {
+    width: 100%;
+    margin-bottom: 0.5rem;
+    order: -1;
+  }
+  
+  .user-permission-tag {
+    margin-right: auto;
+    font-size: 0.75rem;
+  }
+  
+  .btn-share, .btn-draft {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.9rem;
+  }
+  
+  .publish-btn {
+    padding: 0.4rem 1rem;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 425px) {
+  .write-blog-layout {
+    padding: 1rem;
+  }
+
+  .title-input {
+    font-size: 1.8rem;
+  }
+  
+  .user-permission-tag {
+    display: none;
+  }
 }

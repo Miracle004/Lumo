@@ -6,7 +6,7 @@ import RichTextEditor from '../components/RichTextEditor/RichTextEditor';
 import { Share2, X, Image as ImageIcon, MessageSquare, Trash2, Tag } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import { useNotification } from '../context/NotificationContext'; // Import useNotification
+import { useNotification } from '../context/NotificationContext'; 
 import { io } from 'socket.io-client';
 import { uploadImage } from '../services/uploadService';
 import { toastService } from '../services/toastService';
@@ -27,7 +27,7 @@ interface Post {
   content: string;
   cover_image_url?: string;
   status: 'draft' | 'published';
-  author_id: number; // Corrected to number to match backend
+  author_id: number;
   tags?: string[];
 }
 
@@ -41,10 +41,10 @@ interface Collaborator {
 interface Comment {
   id: number;
   post_id: string;
-  user_id: string; // Assuming user_id from backend is string UUID now
+  user_id: string;
   content: string;
   is_resolved: boolean;
-  created_at: string; // Date string
+  created_at: string;
   username: string;
   user_email: string;
   avatar?: string;
@@ -54,7 +54,7 @@ const WriteBlogPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
-  const { fetchCount } = useNotification(); // Get fetchCount to update badge
+  const { fetchCount } = useNotification();
   const [saveStatus, setSaveStatus] = useState<'Saved' | 'Saving...' | 'Error' | ''>('');
   const [showShareModal, setShowShareModal] = useState(false);
   const [collaboratorEmail, setCollaboratorEmail] = useState('');
@@ -75,23 +75,21 @@ const WriteBlogPage: React.FC = () => {
   // Determine current user's permission
   let currentUserPermission: 'author' | 'edit' | 'comment' | 'view' | 'none' = 'none';
   if (user && currentPost) {
-    if (String(user.id) === String(currentPost.author_id)) { // Ensure string comparison
+    if (String(user.id) === String(currentPost.author_id)) { 
       currentUserPermission = 'author';
     } else {
-      const collab = postCollaborators.find(c => String(c.user_id) === String(user.id)); // Ensure string comparison
+      const collab = postCollaborators.find(c => String(c.user_id) === String(user.id)); 
       if (collab) {
         currentUserPermission = collab.permission;
       }
     }
   }
 
-  // Determine if the current user can comment (author, or collaborator with edit/comment permission)
   const canUserComment = user && (
-    (currentPost && String(user.id) === String(currentPost.author_id)) || // Corrected: Check author_id
+    (currentPost && String(user.id) === String(currentPost.author_id)) || 
     postCollaborators.some(c => String(c.user_id) === String(user.id) && (c.permission === 'comment' || c.permission === 'edit'))
   );
 
-  // Mark specific post notifications as read when opening the post
   useEffect(() => {
      if (id && isAuthenticated) {
          axios.post('/api/notifications/mark-read', { postId: id })
@@ -111,7 +109,7 @@ const WriteBlogPage: React.FC = () => {
     validationSchema: Yup.object({
       title: Yup.string().max(100, 'Must be 100 characters or less').required('Required'),
       content: Yup.string().min(20, 'Must be at least 20 characters').required('Required'),
-      imageUrl: Yup.string().nullable(), // Removed .url() validation temporarily
+      imageUrl: Yup.string().nullable(),
       tags: Yup.array().of(Yup.string()),
     }),
     onSubmit: async (values, { setSubmitting }) => {
@@ -121,7 +119,6 @@ const WriteBlogPage: React.FC = () => {
             return;
         }
 
-        // Save first to ensure latest content is published
         setSaveStatus('Saving...');
         await axios.put(`/api/posts/${id}`, {
             title: values.title,
@@ -131,7 +128,6 @@ const WriteBlogPage: React.FC = () => {
         });
         setSaveStatus('Saved');
 
-        // Then Publish
         await axios.post(`/api/posts/${id}/publish`);
         toastService.success('Published successfully!');
         navigate(`/read/${id}`);
@@ -139,7 +135,6 @@ const WriteBlogPage: React.FC = () => {
         console.error('Publish failed:', err);
         setSaveStatus('Error');
         const errorMsg = axios.isAxiosError(err) ? err.response?.data?.error || err.response?.data?.message : 'Failed to publish post';
-        // Do not setPostError here, just toast. This keeps the user on the editor.
         toastService.error(errorMsg);
       } finally {
         setSubmitting(false);
@@ -147,7 +142,6 @@ const WriteBlogPage: React.FC = () => {
     },
   });
 
-  // Debugging log
   useEffect(() => {
     console.log('Formik Values:', formik.values);
     console.log('Formik Errors:', formik.errors);
@@ -219,13 +213,12 @@ const WriteBlogPage: React.FC = () => {
   }, [isAuthenticated, navigate]);
 
   useEffect(() => {
-    const loadPostAndComments = async () => { // Renamed to reflect comment fetching
+    const loadPostAndComments = async () => { 
       if (!isAuthenticated) return;
 
       if (id) {
         try {
           const response = await axios.get(`/api/posts/${id}`);
-          // Ensure response.data has author_id. The interface expects it now.
           setCurrentPost(response.data);
           formik.setValues({
             title: response.data.title || '',
@@ -236,14 +229,14 @@ const WriteBlogPage: React.FC = () => {
           setIsNewPost(false);
           const collabResponse = await axios.get(`/api/posts/${id}/collaborators`);
           setPostCollaborators(collabResponse.data.collaborators);
-          fetchComments(id); // Fetch comments here
+          fetchComments(id); 
         } catch (err) {
           console.error('Failed to fetch post:', err);
           const errorMsg = axios.isAxiosError(err) ? (err.response?.data?.message || 'Failed to load post') : 'Failed to load post';
           
           if (axios.isAxiosError(err) && (err.response?.status === 403 || err.response?.status === 404)) {
              navigate('/404');
-             return; // Stop further execution/rendering logic related to error
+             return; 
           }
           
           setPostError(errorMsg);
@@ -252,30 +245,22 @@ const WriteBlogPage: React.FC = () => {
           setInitialLoading(false);
         }
       } else {
-        // New Post - Don't create on DB yet. Wait for user input.
         setIsNewPost(true);
         setInitialLoading(false);
-        // Formik initialValues are already empty strings, which is correct for new post.
       }
     };
 
     loadPostAndComments();
-  }, [id, isAuthenticated, navigate, fetchComments]); // Added fetchComments to dependencies
+  }, [id, isAuthenticated, navigate, fetchComments]); 
 
-  // Socket listener for new comments
   useEffect(() => {
     if (!id) return;
     
-    // Connect to the specific post room
     const socket = io(import.meta.env.VITE_API_BASE_URL);
     
     socket.emit('join-post', id);
 
     socket.on('new-comment', (newComment: Comment) => {
-        // ... previous logic ...
-        
-        // Prevent duplication: If I wrote this comment, handleAddComment already added it.
-        // Don't add it again via socket.
         if (user && String(newComment.user_id) === String(user.id)) {
             return;
         }
@@ -284,23 +269,13 @@ const WriteBlogPage: React.FC = () => {
             if (prev.find(c => c.id === newComment.id)) return prev;
             return [newComment, ...prev];
         });
-        
-        // If we received a new comment, it likely generated a notification for us (if we are author).
-        // Fetch count to update badge.
-        // Wait, 'new-comment' event is for the post room. 'new-notification' is for user room.
-        // NotificationContext handles 'new-notification'.
-        // So we don't need to do anything here for the badge count itself, 
-        // BUT if we are ON the page reading the comment, we should probably mark it as read immediately?
-        // Or just let the user see the badge increment?
-        // User said: "even though i have read the comment... notification count keeps increasing".
-        // This implies if I am ON the page, it should probably NOT increase or auto-mark read.
     });
 
     return () => {
         socket.emit('leave-post', id);
         socket.disconnect();
     };
-  }, [id, user]); // Re-run if ID or user changes
+  }, [id, user]);
 
   const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === 'Enter') {
@@ -322,14 +297,11 @@ const WriteBlogPage: React.FC = () => {
   };
 
   const autoSave = useCallback(async () => {
-    // Only save if dirty and not loading. 
-    // If it's a new post (no ID), we still want to save (create) if dirty.
     if (!formik.dirty || initialLoading || (currentPost && currentPost.status === 'published')) return;
 
     setSaveStatus('Saving...');
     try {
       if (!id) {
-          // First save: Create the post
           const response = await axios.post('/api/posts/create', {
             title: formik.values.title,
             content: formik.values.content,
@@ -338,12 +310,8 @@ const WriteBlogPage: React.FC = () => {
           const newPost = response.data;
           setCurrentPost(newPost);
           setSaveStatus('Saved');
-          // Update URL without reloading
           navigate(`/write/${newPost.id}`, { replace: true });
-          
-          // Future updates will have 'id' and fall into the 'else' block
       } else {
-          // Subsequent saves: Update existing
           const updatedPost = {
             title: formik.values.title,
             content: formik.values.content,
@@ -354,10 +322,6 @@ const WriteBlogPage: React.FC = () => {
           setCurrentPost(response.data);
           setSaveStatus('Saved');
       }
-      
-      // Reset dirty state slightly so we don't save again immediately unless user types more?
-      // Formik's resetForm clears dirty, but we might want to keep the values.
-      // formik.resetForm({ values: formik.values }); // This sets dirty to false.
     } catch (err) {
       console.error('Auto-save failed:', err);
       setSaveStatus('Error');
@@ -365,7 +329,6 @@ const WriteBlogPage: React.FC = () => {
   }, [id, currentPost, formik.values, formik.dirty, initialLoading, navigate]);
 
   useEffect(() => {
-    // Only start timer if form is dirty
     if (!formik.dirty) return;
 
     const timer = setTimeout(() => {
@@ -539,10 +502,6 @@ const WriteBlogPage: React.FC = () => {
 
           <div className="comments-list">
             {comments.filter(comment => {
-                // Visibility Logic:
-                // 1. If I am the Post Author, I see everything.
-                // 2. If I am the Comment Author, I see my own comment.
-                // 3. Otherwise, hidden.
                 if (!user || !currentPost) return false;
                 
                 const amIPostAuthor = String(user.id) === String(currentPost.author_id);

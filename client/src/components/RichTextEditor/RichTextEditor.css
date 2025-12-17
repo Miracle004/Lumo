@@ -4,7 +4,7 @@
   background-color: var(--bg-primary);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  /* CRITICAL FIX: Removed overflow: hidden to allow sticky toolbar to work */
 }
 
 .editor-toolbar {
@@ -15,6 +15,16 @@
   padding: 0.75rem;
   background-color: var(--bg-secondary);
   border-bottom: 1px solid var(--border-color);
+  
+  /* Sticky Positioning */
+  position: -webkit-sticky;
+  position: sticky;
+  top: var(--header-height, 60px); /* Adjusts automatically to your header height */
+  z-index: 40;
+
+  /* Fix corners since we removed overflow:hidden from parent */
+  border-top-left-radius: 0.5rem;
+  border-top-right-radius: 0.5rem;
 }
 
 .toolbar-group {
@@ -75,6 +85,7 @@
 .ProseMirror {
   min-height: 300px;
   outline: none;
+  text-align: justify;
 }
 
 .ProseMirror > * + * {
@@ -162,4 +173,10 @@
   float: left;
   height: 0;
   pointer-events: none;
+}
+
+@media (max-width: 768px) {
+  .ProseMirror h1 { font-size: 1.75rem; }
+  .ProseMirror h2 { font-size: 1.5rem; }
+  .ProseMirror h3 { font-size: 1.25rem; }
 }

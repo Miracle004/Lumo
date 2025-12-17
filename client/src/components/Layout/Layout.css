@@ -14,9 +14,9 @@
   position: fixed;
   top: 0;
   left: 0;
+  gap: 20px;
   right: 0;
   z-index: 1000;
-  /* border-bottom: 1px solid var(--border-color);  Optional per design guide, guide says "Background: Same as page background" */
 }
 
 .navbar-left {
@@ -34,13 +34,44 @@
 }
 
 .brand-icon {
-  color: var(--accent); /* Inferred leaf color or white */
+  color: var(--accent);
 }
 
 .navbar-right {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 0.5rem;
+}
+
+/* Hamburger menu - hidden by default */
+.hamburger-btn {
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  z-index: 1001;
+}
+
+.hamburger-btn span {
+  width: 24px;
+  height: 2px;
+  background-color: var(--text-primary);
+  transition: all 0.3s ease;
+}
+
+.hamburger-btn.open span:nth-child(1) {
+  transform: rotate(45deg) translate(5px, 5px);
+}
+
+.hamburger-btn.open span:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger-btn.open span:nth-child(3) {
+  transform: rotate(-45deg) translate(7px, -6px);
 }
 
 .nav-icon-btn {
@@ -59,42 +90,42 @@
 }
 
 .nav-text-link {
-    font-size: 0.95rem;
-    font-weight: 500;
+  font-size: 0.95rem;
+  font-weight: 500;
 }
 
 /* Search Bar */
 .search-bar-container {
-    display: flex;
-    align-items: center;
-    position: relative;
-    background-color: transparent;
-    border-radius: 20px;
-    transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  position: relative;
+  background-color: transparent;
+  border-radius: 20px;
+  transition: all 0.3s ease;
 }
 
 .search-bar-container.active {
-    background-color: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    padding-left: 0.5rem;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  padding-left: 0.5rem;
 }
 
 .search-input {
-    width: 0;
-    opacity: 0;
-    border: none;
-    background: transparent;
-    color: var(--text-primary);
-    outline: none;
-    transition: all 0.3s ease;
-    padding: 0;
-    font-size: 0.9rem;
+  width: 0;
+  opacity: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  outline: none;
+  transition: all 0.3s ease;
+  padding: 0;
+  font-size: 0.9rem;
 }
 
 .search-bar-container.active .search-input {
-    width: 200px;
-    opacity: 1;
-    padding: 0.4rem 0.5rem;
+  width: 200px;
+  opacity: 1;
+  padding: 0.4rem 0.5rem;
 }
 
 .profile-avatar {
@@ -117,6 +148,22 @@
   object-fit: cover;
 }
 
+/* NEW STYLES ADDED HERE 
+   Moved from inline styles in Layout.tsx
+*/
+.profile-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+.nav-username {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
 .main-content {
   margin-top: var(--header-height);
   flex-grow: 1;
@@ -131,4 +178,110 @@
 
 .login-link:hover {
   color: var(--accent);
+}
+
+/* Mobile menu containers - hidden by default */
+.mobile-menu-icons,
+.mobile-menu-links {
+  display: none;
+}
+
+/* Mobile styles - only applies below 500px */
+@media (max-width: 500px) {
+  .navbar {
+    padding: 0 1rem;
+    gap: 10px;
+  }
+
+  /* Show hamburger menu */
+  .hamburger-btn {
+    display: flex;
+  }
+
+  /* Hide desktop navbar items */
+  /* This rule will now correctly hide .profile-link because the inline display:flex is gone */
+  .navbar-right > *:not(.mobile-menu-icons):not(.mobile-menu-links) {
+    display: none;
+  }
+
+  /* Show mobile menu containers */
+  .mobile-menu-icons,
+  .mobile-menu-links {
+    display: flex;
+  }
+
+  /* Mobile menu overlay */
+  .navbar-right {
+    position: fixed;
+    top: var(--header-height);
+    right: -100%;
+    width: 280px;
+    height: calc(100vh - var(--header-height));
+    background-color: var(--bg-primary);
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+    padding: 1rem 0;
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+    transition: right 0.3s ease;
+    overflow-y: auto;
+  }
+
+  .navbar-right.open {
+    right: 0;
+  }
+
+  /* Mobile menu grid layout */
+  .mobile-menu-icons {
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    justify-content: space-around;
+  }
+
+  .mobile-menu-links {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .mobile-menu-link {
+    width: 100%;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-weight: 500;
+  }
+
+  .mobile-menu-link:hover {
+    background-color: var(--bg-secondary);
+  }
+
+  .mobile-menu-icons .search-bar-container {
+    width: auto;
+    padding: 0;
+  }
+
+  .mobile-menu-icons .search-bar-container.active {
+    background-color: var(--bg-secondary);
+    padding: 0.4rem 0.75rem;
+  }
+
+  .mobile-menu-icons .search-bar-container.active .search-input {
+    width: 150px;
+  }
+
+  /* Icon buttons in first row */
+  .mobile-menu-icons .nav-icon-btn {
+    padding: 0.5rem;
+  }
+
+  /* Profile in mobile menu */
+  .mobile-menu-link .profile-avatar {
+    width: 32px;
+    height: 32px;
+  }
 }

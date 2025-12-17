@@ -181,7 +181,7 @@
 .article-body-content {
   color: var(--text-primary);
   font-family: var(--font-family); 
-  text-align: left;
+  text-align: justify;
   line-height: 1.6;
   min-height: 300px;
 }
@@ -383,3 +383,19 @@
 .share-btn.facebook:hover { background-color: rgba(24, 119, 242, 0.1); }
 .share-btn.instagram { color: #C13584; }
 .share-btn.instagram:hover { background-color: rgba(193, 53, 132, 0.1); }
+
+@media (max-width : 430px) {
+  .article-content-wrapper{
+    padding: 0 10px;
+  }
+}
+
+@media (max-width: 768px) {
+  .article-title {
+    font-size: 2.25rem;
+  }
+  
+  .article-body-content h1 { font-size: 1.75rem; }
+  .article-body-content h2 { font-size: 1.5rem; }
+  .article-body-content h3 { font-size: 1.25rem; }
+}
