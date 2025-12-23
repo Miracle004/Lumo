@@ -43,6 +43,8 @@ app.use(bodyParser.urlencoded({ extended: true, limit: '30mb' }));
 // Serve uploaded files statically
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
+const isProduction = process.env.NODE_ENV === 'production' || process.env.RENDER === 'true';
+
 // Session middleware
 app.use(session({
     secret: process.env.SESSION_SECRET || "SOMETYPESHII", // Use env var
@@ -50,9 +52,10 @@ app.use(session({
     saveUninitialized: false, // Recommended: false
     proxy: true, // Required for Heroku/Render/Vercel to set Secure cookies
     cookie: {
-        secure: process.env.NODE_ENV === 'production', // Secure in production
+        secure: isProduction, // Secure in production
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax' // 'lax' for local dev
+        sameSite: isProduction ? 'none' : 'lax', // 'none' required for cross-site
+        httpOnly: true // Mitigate XSS
     }
 }));
 
