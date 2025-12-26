@@ -403,6 +403,23 @@
   padding-top: 0.5rem;
 }
 
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spin-anim {
+  animation: spin 1s linear infinite;
+}
+
+.btn-generate-title:hover {
+    background-color: var(--bg-secondary) !important;
+}
+
 @media (max-width: 768px) {
   .title-input {
     font-size: 2.25rem;

@@ -3,7 +3,7 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { useParams, useNavigate } from 'react-router-dom';
 import RichTextEditor from '../components/RichTextEditor/RichTextEditor';
-import { Share2, X, Image as ImageIcon, MessageSquare, Trash2, Tag } from 'lucide-react';
+import { Share2, X, Image as ImageIcon, MessageSquare, Trash2, Tag, Sparkles, Loader2 } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext'; 
@@ -67,6 +67,7 @@ const WriteBlogPage: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [newCommentContent, setNewCommentContent] = useState('');
+  const [isGeneratingTitle, setIsGeneratingTitle] = useState(false);
 
   // Viewers AND Commenters should not be able to edit the main content.
   const isViewerOrCommenter = user ? postCollaborators.some(c => c.user_id === user.id && (c.permission === 'view' || c.permission === 'comment')) : false;
@@ -296,6 +297,28 @@ const WriteBlogPage: React.FC = () => {
       formik.setFieldValue('tags', formik.values.tags.filter((t: string) => t !== tagToRemove));
   };
 
+  const handleGenerateTitle = async () => {
+      const content = formik.values.content;
+      if (!content || content.length < 50) {
+          toastService.info('Please write some content first (at least 50 characters) to generate a title.');
+          return;
+      }
+
+      setIsGeneratingTitle(true);
+      try {
+          const response = await axios.post('/api/posts/generate-title', { content });
+          const newTitle = response.data.title;
+          formik.setFieldValue('title', newTitle);
+          toastService.success('Title generated!');
+      } catch (err) {
+          console.error('Failed to generate title:', err);
+          const errorMsg = axios.isAxiosError(err) ? (err.response?.data?.error || 'Failed to generate title') : 'Failed to generate title';
+          toastService.error(errorMsg);
+      } finally {
+          setIsGeneratingTitle(false);
+      }
+  };
+
   const autoSave = useCallback(async () => {
     if (!formik.dirty || initialLoading || (currentPost && currentPost.status === 'published')) return;
 
@@ -401,22 +424,47 @@ const WriteBlogPage: React.FC = () => {
         </div>
 
         <div className="write-container">
-            <div className="title-input-container">
-                <input
-                    id="title"
-                    name="title"
-                    type="text"
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    value={formik.values.title}
-                    className="title-input"
-                    placeholder="Title"
-                    autoComplete="off"
-                    disabled={isReadOnly}
-                />
-                {formik.touched.title && formik.errors.title ? (
-                    <div className="error-message">{formik.errors.title}</div>
-                ) : null}
+            <div className="title-input-container" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ flex: 1 }}>
+                    <input
+                        id="title"
+                        name="title"
+                        type="text"
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        value={formik.values.title}
+                        className="title-input"
+                        placeholder="Title"
+                        autoComplete="off"
+                        disabled={isReadOnly}
+                    />
+                    {formik.touched.title && formik.errors.title ? (
+                        <div className="error-message">{formik.errors.title}</div>
+                    ) : null}
+                </div>
+                {!isReadOnly && (
+                    <button 
+                        type="button" 
+                        onClick={handleGenerateTitle} 
+                        className="btn-generate-title"
+                        disabled={isGeneratingTitle}
+                        title="Generate Title with AI"
+                        style={{ 
+                            background: 'none', 
+                            border: '1px solid var(--border-color)', 
+                            borderRadius: '50%', 
+                            width: '40px', 
+                            height: '40px', 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            color: 'var(--primary-color)'
+                        }}
+                    >
+                        {isGeneratingTitle ? <Loader2 className="spin-anim" size={20} /> : <Sparkles size={20} />}
+                    </button>
+                )}
             </div>
 
              <div className="cover-image-input-container">

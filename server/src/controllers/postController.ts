@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import * as PostModel from '../models/Post';
 import * as CollaboratorModel from '../models/Collaborator';
+import * as aiService from '../services/aiService';
 
 export const createDraft = async (req: Request, res: Response) => {
     try {
@@ -307,5 +308,33 @@ export const searchPosts = async (req: Request, res: Response) => {
         res.json(posts);
     } catch (error) {
         res.status(500).json({ error: 'Failed to search posts', details: error });
+    }
+};
+
+export const generateTitle = async (req: Request, res: Response) => {
+    try {
+        const { content } = req.body;
+        if (!content) {
+            return res.status(400).json({ error: 'Content is required' });
+        }
+
+        let cleanContent = '';
+        if (typeof content === 'string') {
+            // Basic HTML strip if string
+            cleanContent = content.replace(/<[^>]*>/g, ' ');
+        } else {
+            // TipTap JSON
+            cleanContent = extractTextFromTipTap(content);
+        }
+
+        if (cleanContent.trim().length < 50) {
+             return res.status(400).json({ error: 'Content is too short to generate a title.' });
+        }
+
+        const title = await aiService.generateBlogTitle(cleanContent);
+        res.json({ title });
+    } catch (error) {
+        console.error('Error in generateTitle controller:', error);
+        res.status(500).json({ error: 'Failed to generate title' });
     }
 };

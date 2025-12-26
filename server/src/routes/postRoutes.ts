@@ -18,6 +18,9 @@ router.get('/bookmarks', ensureAuthenticated, PostController.getBookmarkedPosts)
 // --- 2. Public Routes ---
 router.get('/published', PostController.getPublicPosts);
 router.get('/search', PostController.searchPosts);
+
+router.post('/generate-title', ensureAuthenticated, PostController.generateTitle);
+
 // This generic route catches everything else (like UUIDs).
 // Since specific keywords above are already handled, this is safe.
 router.get('/:id', PostController.getPost); 

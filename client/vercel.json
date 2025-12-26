@@ -1,6 +1,22 @@
 {
   "rewrites": [
     {
+      "source": "/auth/(.*)",
+      "destination": "https://lumo-q0bg.onrender.com/auth/$1"
+    },
+    {
+      "source": "/user/(.*)",
+      "destination": "https://lumo-q0bg.onrender.com/user/$1"
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": "https://lumo-q0bg.onrender.com/api/$1"
+    },
+    {
+      "source": "/uploads/(.*)",
+      "destination": "https://lumo-q0bg.onrender.com/uploads/$1"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

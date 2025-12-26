@@ -76,72 +76,13 @@ router.get('/auth/google/callback',
             console.error('Session save error:', err);
             return res.redirect('/login?error=session_save_failed');
         }
-        
-        // Prepare Frontend URL
+        // Redirect to frontend dashboard
         let frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+        // Remove trailing slash if present
         if (frontendUrl.endsWith('/')) {
             frontendUrl = frontendUrl.slice(0, -1);
         }
-        const targetUrl = `${frontendUrl}/dashboard`;
-
-        // Serve an HTML page to break the "bounce tracking" chain
-        // This requires user interaction (or at least a client-side navigation) which browsers trust more than a 302 redirect
-        const html = `
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Login Successful</title>
-                <style>
-                    body {
-                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                        display: flex;
-                        justify-content: center;
-                        align-items: center;
-                        height: 100vh;
-                        background-color: #121212;
-                        color: #ffffff;
-                        margin: 0;
-                    }
-                    .container {
-                        text-align: center;
-                        background-color: #1e1e1e;
-                        padding: 2rem;
-                        border-radius: 8px;
-                        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-                    }
-                    h2 { margin-bottom: 1rem; }
-                    p { margin-bottom: 2rem; color: #b3b3b3; }
-                    .btn {
-                        background-color: #4CAF50;
-                        color: white;
-                        padding: 10px 20px;
-                        text-decoration: none;
-                        border-radius: 4px;
-                        font-weight: bold;
-                        transition: background-color 0.3s;
-                    }
-                    .btn:hover { background-color: #45a049; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <h2>Login Successful!</h2>
-                    <p>Click the button below if you are not automatically redirected.</p>
-                    <a href="${targetUrl}" class="btn" id="continueBtn">Continue to Dashboard</a>
-                </div>
-                <script>
-                    // Attempt auto-redirect after a short delay
-                    setTimeout(() => {
-                        document.getElementById('continueBtn').click();
-                    }, 1000);
-                </script>
-            </body>
-            </html>
-        `;
-        
-        res.send(html);
+        res.redirect(`${frontendUrl}/dashboard`);
     });
   }
 );
